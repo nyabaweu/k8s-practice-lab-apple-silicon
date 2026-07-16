@@ -1,0 +1,40 @@
+# Scenario 9 — two teams sharing 8 CPUs of cluster capacity through Kueue
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata: {name: default-flavor}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata: {name: team-research}
+spec:
+  namespaceSelector: {}
+  resourceGroups:
+  - coveredResources: [cpu, memory]
+    flavors:
+    - name: default-flavor
+      resources:
+      - {name: cpu, nominalQuota: 6}
+      - {name: memory, nominalQuota: 12Gi}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata: {name: team-app}
+spec:
+  namespaceSelector: {}
+  resourceGroups:
+  - coveredResources: [cpu, memory]
+    flavors:
+    - name: default-flavor
+      resources:
+      - {name: cpu, nominalQuota: 2}
+      - {name: memory, nominalQuota: 4Gi}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata: {name: research-queue, namespace: ai-lab}
+spec: {clusterQueue: team-research}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata: {name: app-queue, namespace: ai-lab}
+spec: {clusterQueue: team-app}

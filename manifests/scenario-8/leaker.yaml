@@ -1,0 +1,16 @@
+# A deliberately leaky app: watch it OOMKill in Grafana, find the alert in Prometheus
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: leaker}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: leaker}}
+  template:
+    metadata: {labels: {app: leaker}}
+    spec:
+      containers:
+      - name: leaker
+        image: python:3.12-alpine
+        command: [python, -c, "l=[]\nwhile True: l.append(' ' * 10_000_000)"]
+        resources:
+          limits: {memory: 128Mi}

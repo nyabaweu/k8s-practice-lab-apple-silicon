@@ -1,0 +1,50 @@
+# Scenario 2 — The Config Kitchen (base version, Act 1)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: menu
+data:
+  DISH_OF_DAY: "chocolate ice cream"
+  GREETING: "Welcome to the Config Kitchen"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: house-secret
+stringData:
+  SECRET_INGREDIENT: "cardamom"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: diner
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: diner}
+  template:
+    metadata:
+      labels: {app: diner}
+    spec:
+      containers:
+      - name: diner
+        image: python:3.12-alpine
+        command: [python, -c]
+        args:
+        - |
+          import http.server, os, json
+          class H(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  body = json.dumps({
+                      "greeting": os.environ.get("GREETING","(unset)"),
+                      "dish": os.environ.get("DISH_OF_DAY","(unset)"),
+                      "secret_ingredient": os.environ.get("SECRET_INGREDIENT","(unset)"),
+                      "pod": os.environ.get("HOSTNAME")}).encode()
+                  self.send_response(200); self.end_headers(); self.wfile.write(body)
+          http.server.HTTPServer(("",8080), H).serve_forever()
+        envFrom:
+        - configMapRef: {name: menu}
+        - secretRef: {name: house-secret}
+        resources:
+          requests: {cpu: 50m, memory: 64Mi}
+          limits: {cpu: 250m, memory: 128Mi}

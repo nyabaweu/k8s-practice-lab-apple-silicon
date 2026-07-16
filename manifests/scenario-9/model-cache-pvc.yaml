@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: model-cache}
+spec:
+  storageClassName: csi-hostpath-sc
+  accessModes: [ReadWriteOnce]
+  resources: {requests: {storage: 10Gi}}

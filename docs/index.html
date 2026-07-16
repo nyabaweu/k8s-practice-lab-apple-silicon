@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kubernetes Practice Lab on the MacBook Pro M5 — Install, Operate & Nine End-to-End Scenarios</title>
+<style>
+  :root{
+    --ink:#1a2332; --ink-soft:#3d4a5c; --muted:#66738a;
+    --bg:#ffffff; --bg-soft:#f5f7fa; --bg-code:#0f1722; --code-ink:#d7e3f4;
+    --accent:#2563eb; --accent-dark:#1e40af; --accent-soft:#dbeafe;
+    --green:#0f766e; --green-soft:#ccfbf1;
+    --amber:#b45309; --amber-soft:#fef3c7;
+    --red:#b91c1c; --red-soft:#fee2e2;
+    --purple:#6d28d9; --purple-soft:#ede9fe;
+    --border:#dbe2ec;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--ink); background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:16px; line-height:1.65;
+  }
+  .page{max-width:960px;margin:0 auto;padding:0 28px 80px}
+  h1,h2,h3,h4{line-height:1.25;color:var(--ink);font-weight:700}
+  h1{font-size:2.1rem;margin:2.2em 0 .4em}
+  h2{font-size:1.55rem;margin:2.4em 0 .5em;padding-top:.6em;border-top:3px solid var(--accent);}
+  h3{font-size:1.2rem;margin:1.8em 0 .4em}
+  h4{font-size:1.02rem;margin:1.4em 0 .3em;color:var(--ink-soft)}
+  p{margin:.65em 0}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    font-size:.86em;background:var(--bg-soft);border:1px solid var(--border);
+    padding:.08em .35em;border-radius:5px;color:var(--accent-dark);
+  }
+  pre{
+    background:var(--bg-code);color:var(--code-ink);border-radius:var(--radius);
+    padding:16px 18px;overflow-x:auto;font-size:.83rem;line-height:1.55;
+    margin:1em 0;
+  }
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+  pre .c{color:#7b8ba3}      /* comment */
+  pre .k{color:#7dd3fc}      /* key/keyword */
+  pre .s{color:#fbbf77}      /* string/value */
+  pre .cmd{color:#86efac;font-weight:600} /* command */
+  pre .out{color:#9aa8bd}    /* output */
+  table{border-collapse:collapse;width:100%;margin:1.1em 0;font-size:.92rem}
+  th,td{border:1px solid var(--border);padding:8px 12px;text-align:left;vertical-align:top}
+  th{background:var(--bg-soft);font-weight:600}
+  tr:nth-child(even) td{background:#fafbfd}
+  figure{margin:1.6em 0;text-align:center}
+  figure svg{max-width:100%;height:auto}
+  figcaption{font-size:.85rem;color:var(--muted);margin-top:8px;font-style:italic}
+  .callout{
+    border-left:4px solid var(--accent);background:var(--accent-soft);
+    border-radius:0 var(--radius) var(--radius) 0;padding:12px 16px;margin:1.1em 0;font-size:.95rem;
+  }
+  .callout.warn{border-color:var(--amber);background:var(--amber-soft)}
+  .callout.danger{border-color:var(--red);background:var(--red-soft)}
+  .callout.tip{border-color:var(--green);background:var(--green-soft)}
+  .callout.exam{border-color:var(--purple);background:var(--purple-soft)}
+  .callout .label{font-weight:700;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:2px}
+  .callout.warn .label{color:var(--amber)} .callout.danger .label{color:var(--red)}
+  .callout.tip .label{color:var(--green)} .callout.exam .label{color:var(--purple)}
+  .callout .label{color:var(--accent-dark)}
+  .pill{display:inline-block;background:var(--accent-soft);color:var(--accent-dark);
+    border-radius:999px;padding:1px 10px;font-size:.75rem;font-weight:600;vertical-align:middle}
+  .cover{
+    text-align:center;padding:90px 20px 50px;border-bottom:1px solid var(--border);margin-bottom:30px;
+  }
+  .cover h1{font-size:2.6rem;margin:0 0 10px}
+  .cover .subtitle{font-size:1.15rem;color:var(--ink-soft);max-width:640px;margin:0 auto}
+  .cover .meta{margin-top:26px;font-size:.88rem;color:var(--muted)}
+  .cover .k8s-logo{margin-bottom:18px}
+  .toc{
+    background:var(--bg-soft);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px 28px;margin:1.5em 0 2.5em;
+  }
+  .toc h2{border:none;margin:.2em 0 .6em;padding:0;font-size:1.25rem}
+  .toc ol{margin:.3em 0 .8em;padding-left:1.3em}
+  .toc>ol>li{margin:.35em 0;font-weight:600}
+  .toc ol ol{font-weight:400;font-size:.93rem;margin:.15em 0 .3em}
+  .toc ol ol li{margin:.12em 0}
+  .part-banner{
+    background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:var(--radius);
+    padding:34px 34px;margin:3.5em 0 1.5em;
+  }
+  .part-banner .kicker{font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;opacity:.85;font-weight:700}
+  .part-banner h1{color:#fff;margin:.2em 0 .25em;font-size:2rem;border:none;padding:0}
+  .part-banner p{color:#dbeafe;margin:.3em 0 0;font-size:1rem;max-width:720px}
+  .part-banner.ai{background:linear-gradient(135deg,#3b0764,#6d28d9)}
+  .part-banner.ai p{color:#ede9fe}
+  .part-banner.demo{background:linear-gradient(135deg,#064e3b,#0f766e)}
+  .part-banner.demo p{color:#ccfbf1}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){.two-col{grid-template-columns:1fr}}
+  .card{border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;background:#fff}
+  .card h4{margin:.1em 0 .35em}
+  .kv th{width:220px}
+  .cmdtable code{white-space:nowrap}
+  .footer-note{margin-top:60px;border-top:1px solid var(--border);padding-top:18px;font-size:.85rem;color:var(--muted)}
+  .src{font-size:.8rem;color:var(--muted)}
+  /* print */
+  @media print{
+    body{font-size:11pt}
+    .page{max-width:100%;padding:0 4mm}
+    pre{white-space:pre-wrap;word-break:break-word}
+    h2{break-after:avoid}
+    figure,table,.callout,pre{break-inside:avoid}
+    .part-banner{break-before:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .cover{padding-top:40mm}
+    a{color:inherit}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ======================= COVER ======================= -->
+<div class="cover">
+  <div class="k8s-logo">
+    <svg width="86" height="86" viewBox="0 0 100 100" role="img" aria-label="Kubernetes helm logo">
+      <polygon points="50,4 89,25 98,68 70,96 30,96 2,68 11,25" fill="#326CE5"/>
+      <g stroke="#fff" stroke-width="4.5" stroke-linecap="round" fill="none">
+        <circle cx="50" cy="52" r="9" fill="#fff" stroke="none"/>
+        <line x1="50" y1="43" x2="50" y2="22"/>
+        <line x1="58" y1="48" x2="76" y2="37"/>
+        <line x1="58" y1="57" x2="74" y2="70"/>
+        <line x1="50" y1="61" x2="50" y2="81"/>
+        <line x1="42" y1="57" x2="26" y2="70"/>
+        <line x1="42" y1="48" x2="24" y2="37"/>
+      </g>
+    </svg>
+  </div>
+  <h1>Kubernetes Practice Lab<br>on the MacBook Pro M5</h1>
+  <p class="subtitle">Install &amp; operate your local cluster, then master it through nine end-to-end scenarios — from your first deployment to a nine-node chaos fleet, GitOps, and a miniature AI platform.</p>
+  <p class="meta">
+        Environment: MacBook Pro M5 Max · 128 GB RAM · macOS 26 Tahoe · Docker Desktop + minikube + Calico · all-free tooling.<br>
+    Compiled July 2026
+  </p>
+</div>
+
+<!-- ======================= TOC ======================= -->
+<nav class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#part-a">Part A — Your Lab: Install, Operate, Wrap Up</a>
+      <ol>
+        <li><a href="#o1">What You Built (and Why It's M5-Safe)</a></li>
+        <li><a href="#o2">Install Instructions — The Complete Record</a></li>
+        <li><a href="#o3">Daily Operations: Start, Stop, Inspect</a></li>
+        <li><a href="#o4">Wrapping Up a Learning Session</a></li>
+        <li><a href="#o5">Scaling Up the Lab on an M5 Max (128 GB)</a></li>
+      </ol>
+    </li>
+    <li><a href="#part-b">Part B — Basic Scenarios (Foundation Drills)</a>
+      <ol>
+        <li><a href="#sc1">Scenario 1 — Hello, Cluster: Deploy, Break, Self-Heal</a></li>
+        <li><a href="#sc2">Scenario 2 — The Config Kitchen: ConfigMaps, Secrets &amp; Probes</a></li>
+        <li><a href="#sc3">Scenario 3 — Storage That Survives: PVCs, a Database &amp; Snapshots</a></li>
+      </ol>
+    </li>
+    <li><a href="#part-c">Part C — Medium Scenarios (Building Real Systems)</a>
+      <ol>
+        <li><a href="#sc4">Scenario 4 — Bookshelf: A Three-Tier App with Ingress &amp; Autoscaling</a></li>
+        <li><a href="#sc5">Scenario 5 — Lock It Down: NetworkPolicies &amp; RBAC</a></li>
+        <li><a href="#sc6">Scenario 6 — Break It On Purpose: Troubleshooting Drills</a></li>
+      </ol>
+    </li>
+    <li><a href="#part-d">Part D — Advanced Scenarios (M5 Max Territory)</a>
+      <ol>
+        <li><a href="#sc7">Scenario 7 — The Nine-Node Fleet: HA, Placement &amp; Chaos</a></li>
+        <li><a href="#sc8">Scenario 8 — GitOps &amp; Observability: Argo CD + Prometheus/Grafana</a></li>
+        <li><a href="#sc9">Scenario 9 — The Mini AI Platform: Kueue, Batch Jobs &amp; LLM Serving</a></li>
+      </ol>
+    </li>
+    <li><a href="#map">Appendix — Scenario ↔ Concept Map &amp; Quick Reference</a></li>
+  </ol>
+</nav>
+
+<div class="callout">
+  <span class="label">How to use this lab book</span>
+  Part A is your operations manual — keep it handy. Parts B–D are nine self-contained scenarios in rising difficulty; each states its goal, estimated time, the concepts it exercises, every command with the <em>output you should expect</em>, a deliberate failure or surprise to investigate, and a cleanup block. Expected outputs show representative values — your pod suffixes, IPs and ages will differ; the <em>shape</em> of the output is what to verify. Do them in order the first time; revisit any of them freely — everything is disposable by design.
+</div>
+
+<div class="callout warn">
+  <span class="label">System requirements</span>
+  Apple Silicon Mac (M1–M5; written for the M5 generation) · <strong>macOS 26 Tahoe ≥ 26.5.1</strong> (earlier Tahoe builds carry an M5-specific stability bug under container load) · <strong>Docker Desktop ≥ 4.80</strong> with its VM sized 6 CPU / 8 GB / 60 GB (12 CPU / 48 GB / 120 GB for Part D) · ~80 GB free disk · minikube v1.38+ / Kubernetes v1.34. Intel Macs are not covered, and on M4/M5 chips do <em>not</em> substitute Podman machine, Colima/Lima or QEMU-based engines — they expose SME/SME2 CPU features that crash Linux workloads; Docker Desktop masks them.
+</div>
+
+<!-- ======================= PART A ======================= -->
+<div class="part-banner" id="part-a">
+  <div class="kicker">Part A</div>
+  <h1>Your Lab: Install, Operate, Wrap Up</h1>
+  <p>The complete record of the environment you built, how to run it day to day, how to leave it clean after each session — and how to unleash the M5 Max when a scenario calls for it.</p>
+</div>
+
+<h2 id="o1">1. What You Built (and Why It's M5-Safe)</h2>
+<p>Your cluster is three Kubernetes nodes running as containers inside Docker Desktop's Linux VM, orchestrated by minikube, with Calico as the CNI so NetworkPolicies actually enforce. One picture:</p>
+
+<figure>
+<svg viewBox="0 0 920 360" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Arial,sans-serif">
+  <rect x="10" y="10" width="900" height="340" rx="14" fill="#f5f7fa" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="460" y="38" text-anchor="middle" font-size="15" font-weight="700" fill="#1a2332">macOS 26 Tahoe — MacBook Pro M5 Max (16 CPU cores · 128 GB RAM · 40-core GPU)</text>
+  <text x="460" y="57" text-anchor="middle" font-size="11" fill="#66738a">your terminal: kubectl · minikube · helm · k9s · docker CLI — all talking to the layers below</text>
+  <rect x="40" y="75" width="840" height="240" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="460" y="100" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e40af">Docker Desktop Linux VM (Virtualization.framework) — CPUs/RAM set in Settings → Resources</text>
+  <text x="460" y="118" text-anchor="middle" font-size="11" fill="#66738a">masks the M5's SME2 CPU features from the guest — the reason this stack is crash-safe on your chip</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="70" y="135" width="250" height="160" rx="10" fill="#fff" stroke="#0f766e" stroke-width="1.6"/>
+    <text x="195" y="158" font-weight="700" fill="#0f766e" font-size="12.5">practice  (control plane)</text>
+    <text x="195" y="176" fill="#66738a" font-size="10">a Docker container acting as node 1</text>
+    <rect x="88" y="188" width="100" height="24" rx="5" fill="#dbeafe" stroke="#2563eb"/><text x="138" y="204" fill="#1e40af" font-size="10">kube-apiserver</text>
+    <rect x="196" y="188" width="106" height="24" rx="5" fill="#dbeafe" stroke="#2563eb"/><text x="249" y="204" fill="#1e40af" font-size="10">etcd · scheduler</text>
+    <rect x="88" y="220" width="100" height="24" rx="5" fill="#ccfbf1" stroke="#0f766e"/><text x="138" y="236" fill="#0f766e" font-size="10">kubelet</text>
+    <rect x="196" y="220" width="106" height="24" rx="5" fill="#ccfbf1" stroke="#0f766e"/><text x="249" y="236" fill="#0f766e" font-size="10">calico-node</text>
+    <rect x="88" y="252" width="214" height="24" rx="5" fill="#fef3c7" stroke="#b45309"/><text x="195" y="268" fill="#b45309" font-size="10">system pods only (tainted in §2.5)</text>
+  </g>
+  <g font-size="11" text-anchor="middle">
+    <rect x="345" y="135" width="250" height="160" rx="10" fill="#fff" stroke="#0f766e" stroke-width="1.6"/>
+    <text x="470" y="158" font-weight="700" fill="#0f766e" font-size="12.5">practice-m02  (worker)</text>
+    <text x="470" y="176" fill="#66738a" font-size="10">node 2 — another container</text>
+    <rect x="363" y="188" width="100" height="24" rx="5" fill="#ccfbf1" stroke="#0f766e"/><text x="413" y="204" fill="#0f766e" font-size="10">kubelet</text>
+    <rect x="471" y="188" width="106" height="24" rx="5" fill="#ccfbf1" stroke="#0f766e"/><text x="524" y="204" fill="#0f766e" font-size="10">calico-node</text>
+    <rect x="363" y="220" width="214" height="56" rx="5" fill="#dbeafe" stroke="#2563eb"/><text x="470" y="252" fill="#1e40af">your workload pods</text>
+  </g>
+  <g font-size="11" text-anchor="middle">
+    <rect x="620" y="135" width="250" height="160" rx="10" fill="#fff" stroke="#0f766e" stroke-width="1.6"/>
+    <text x="745" y="158" font-weight="700" fill="#0f766e" font-size="12.5">practice-m03  (worker)</text>
+    <text x="745" y="176" fill="#66738a" font-size="10">node 3 — another container</text>
+    <rect x="638" y="188" width="100" height="24" rx="5" fill="#ccfbf1" stroke="#0f766e"/><text x="688" y="204" fill="#0f766e" font-size="10">kubelet</text>
+    <rect x="746" y="188" width="106" height="24" rx="5" fill="#ccfbf1" stroke="#0f766e"/><text x="799" y="204" fill="#0f766e" font-size="10">calico-node</text>
+    <rect x="638" y="220" width="214" height="56" rx="5" fill="#dbeafe" stroke="#2563eb"/><text x="745" y="252" fill="#1e40af">your workload pods</text>
+  </g>
+  <text x="460" y="338" text-anchor="middle" font-size="10.5" font-style="italic" fill="#66738a">Delete and recreate the whole thing in ~3 minutes. That disposability is a feature — break things fearlessly.</text>
+</svg>
+<figcaption>Figure 1 — The lab: minikube nodes are containers inside Docker Desktop's VM. They inherit its SME2 masking, which is what keeps this stack stable on M4/M5-generation chips.</figcaption>
+</figure>
+
+<table class="kv">
+  <tr><th>Why Docker Desktop?</th><td>The one engine confirmed to mask the M5's SME2 CPU features from Linux guests — Lima/Colima/Rancher (vz) expose them and can SIGILL, Podman machine is confirmed affected, QEMU stacks lagged. Free for personal use.</td></tr>
+  <tr><th>Why minikube?</th><td>One command for a multi-node cluster; one flag for Calico; one-line addons for metrics, ingress, dashboard and CSI snapshots. Simple, easy, yet comprehensive.</td></tr>
+  <tr><th>Why Calico?</th><td>The default minikube CNI does not enforce NetworkPolicy. Calico does — and Scenario 5 depends on it.</td></tr>
+  <tr><th>What this lab can't do</th><td>OS-level node ops (kubeadm upgrades, etcd backup drills — nodes are containers, not VMs) and <strong>GPU passthrough</strong>: no container on macOS can see the Apple GPU. Scenario 9 shows the honest workaround.</td></tr>
+</table>
+
+<h2 id="o2">2. Install Instructions — The Complete Record</h2>
+<p>Everything we did, in order, with the outputs you saw (or should see on a re-install). Safe to re-run top to bottom on a fresh Mac.</p>
+
+<h3>2.0 Prepare the Mac</h3>
+<pre><code><span class="cmd">$ sw_vers</span>
+<span class="out">ProductName:        macOS
+ProductVersion:     26.5.1</span>          <span class="c"># must be ≥ 26.5.1 (M5 stability fix). Update first if lower.</span>
+
+<span class="cmd">$ softwareupdate --install-rosetta --agree-to-license</span>   <span class="c"># for occasional x86-only images</span>
+
+<span class="c"># Homebrew, if you don't already have it:</span>
+<span class="cmd">$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</span></code></pre>
+
+<h3>2.1 Docker Desktop (the engine)</h3>
+<pre><code><span class="cmd">$ brew install --cask docker-desktop</span>     <span class="c"># or download the Apple Silicon build from docker.com</span>
+<span class="cmd">$ open -a Docker</span>                          <span class="c"># launch it — the daemon only runs while the app does</span></code></pre>
+<p>Wait for the menu-bar whale to go steady (30–60 s). Then <strong>Settings → Resources</strong>: <strong>CPUs 6 · Memory 8 GB · Disk 60 GB</strong> for the standard lab (§5 covers the M5 Max upgrade). In <strong>Settings → General</strong> keep VirtioFS on and enable “Use Rosetta for x86_64/amd64 emulation”. Verify:</p>
+<pre><code><span class="cmd">$ docker run --rm hello-world</span>
+<span class="out">Hello from Docker!
+This message shows that your installation appears to be working correctly.
+... (arm64v8) ...</span>                        <span class="c"># arm64v8 = native Apple Silicon, no emulation</span></code></pre>
+
+<div class="callout warn">
+  <span class="label">The error you already met</span>
+  <code>failed to connect to the docker API at unix:///var/run/docker.sock … no such file or directory</code> while <code>docker --version</code> works = the CLI is fine but the <strong>daemon isn't running</strong>. Fix: <code>open -a Docker</code> and wait for the whale. If it persists: <code>docker context ls</code> — the active context should be <code>desktop-linux</code>; if not, <code>docker context use desktop-linux</code>. Success test: <code>docker info</code> prints a <em>Server:</em> section.
+</div>
+
+<h3>2.2 The Kubernetes tools (all free, Apache-2.0)</h3>
+<pre><code><span class="cmd">$ brew install minikube kubectl helm k9s</span>
+<span class="cmd">$ minikube version</span>
+<span class="out">minikube version: v1.38.1</span>
+<span class="cmd">$ kubectl version --client</span>
+<span class="out">Client Version: v1.36.x</span></code></pre>
+
+<h3>2.3 Create the cluster</h3>
+<pre><code><span class="cmd">$ minikube start \
+    --profile=practice \
+    --driver=docker \
+    --nodes=3 \
+    --cni=calico \
+    --cpus=2 \
+    --memory=2200 \
+    --kubernetes-version=v1.34.1</span>
+<span class="out">😄  [practice] minikube v1.38.1 on Darwin 26.5.1 (arm64)
+✨  Using the docker driver based on user configuration
+👍  Starting "practice" primary control-plane node in "practice" cluster
+🚜  Pulling base image v0.0.4x ...
+🔥  Creating docker container (CPUs=2, Memory=2200MB) ...
+🐳  Preparing Kubernetes v1.34.1 on Docker 29.x ...
+🔗  Configuring Calico (Container Networking Interface) ...
+👍  Starting "practice-m02" worker node in "practice" cluster
+👍  Starting "practice-m03" worker node in "practice" cluster
+🏄  Done! kubectl is now configured to use "practice" cluster and "default" namespace by default</span></code></pre>
+
+<h3>2.4 Enable the add-ons</h3>
+<pre><code><span class="cmd">$ minikube addons enable metrics-server      --profile=practice</span>
+<span class="cmd">$ minikube addons enable ingress             --profile=practice</span>
+<span class="cmd">$ minikube addons enable dashboard           --profile=practice</span>
+<span class="cmd">$ minikube addons enable csi-hostpath-driver --profile=practice</span>
+<span class="cmd">$ minikube addons enable volumesnapshots     --profile=practice</span>   <span class="c"># needed for Scenario 3's snapshot step</span></code></pre>
+
+<h3>2.5 Make it production-shaped, then verify</h3>
+<pre><code><span class="c"># minikube leaves the control plane SCHEDULABLE (so 1-node clusters work).
+# We add the production taint ourselves — the control plane needs its resources to manage the cluster.
+# Several scenarios assume this taint exists; don't skip it:</span>
+<span class="cmd">$ kubectl taint node practice node-role.kubernetes.io/control-plane=:NoSchedule</span>
+<span class="out">node/practice tainted</span>
+
+<span class="cmd">$ kubectl get nodes</span>
+<span class="out">NAME           STATUS   ROLES           AGE     VERSION
+practice       Ready    control-plane   5m      v1.34.1
+practice-m02   Ready    &lt;none&gt;          4m      v1.34.1
+practice-m03   Ready    &lt;none&gt;          3m30s   v1.34.1</span>
+
+<span class="cmd">$ kubectl get pods -A --field-selector=status.phase!=Running</span>
+<span class="out">No resources found</span>                       <span class="c"># everything Running = healthy cluster</span>
+
+<span class="cmd">$ kubectl top nodes</span>
+<span class="out">NAME           CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)
+practice       242m         4%       1180Mi          15%
+practice-m02   89m          1%       620Mi           8%
+practice-m03   91m          1%       618Mi           8%</span>
+<span class="c"># Docker-driver quirk worth knowing: every node reports the WHOLE VM's capacity
+# (6 CPUs / 8 GB here) — the --cpus/--memory flags are cgroup hints, not hard node
+# walls. Percentages are of the VM, and scheduling math uses the VM-sized capacity.</span></code></pre>
+
+<h2 id="o3">3. Daily Operations: Start, Stop, Inspect</h2>
+
+<h3>Starting a session</h3>
+<pre><code><span class="cmd">$ open -a Docker</span>                          <span class="c"># ① engine first — wait for the steady whale</span>
+<span class="cmd">$ minikube start --profile=practice</span>       <span class="c"># ② resume the cluster (state preserved)</span>
+<span class="out">😄  [practice] minikube v1.38.1 on Darwin 26.5.1 (arm64)
+🔄  Restarting existing docker container for "practice" ...
+🏄  Done! kubectl is now configured to use "practice" cluster</span>
+<span class="cmd">$ kubectl get nodes</span>                       <span class="c"># ③ confirm 3 × Ready before working</span></code></pre>
+
+<h3>Stopping (end of session — keeps everything)</h3>
+<pre><code><span class="cmd">$ minikube stop --profile=practice</span>
+<span class="out">✋  Stopping node "practice"  ...
+✋  Stopping node "practice-m02"  ...
+✋  Stopping node "practice-m03"  ...
+🛑  3 nodes stopped.</span>
+<span class="c"># Then quit Docker Desktop (whale menu → Quit) to give macOS all its RAM back.</span></code></pre>
+
+<h3>Inspecting — your four windows into the cluster</h3>
+<table class="cmdtable">
+  <tr><th>Command</th><th>What you get</th></tr>
+  <tr><td><code>minikube status --profile=practice</code></td><td>Per-node host/kubelet/apiserver state at a glance.</td></tr>
+  <tr><td><code>minikube dashboard --profile=practice</code></td><td>Opens the web dashboard in your browser (Ctrl-C to stop serving it).</td></tr>
+  <tr><td><code>k9s</code></td><td>Terminal UI — press <code>:</code> then a resource name (<code>pods</code>, <code>deploy</code>, <code>svc</code>); <code>l</code> for logs, <code>d</code> for describe, <code>0</code> to show all namespaces. The fastest way to <em>watch</em> scenarios happen.</td></tr>
+  <tr><td><code>docker stats --no-stream</code></td><td>What each node container actually consumes on the Mac side.</td></tr>
+</table>
+
+<h3>Reaching your apps</h3>
+<pre><code><span class="c"># NodePort / LoadBalancer / Ingress on the docker driver need a bridge to macOS:</span>
+<span class="cmd">$ minikube service &lt;svc-name&gt; --profile=practice</span>       <span class="c"># opens a NodePort service in the browser</span>
+<span class="cmd">$ minikube tunnel --profile=practice</span>                    <span class="c"># run in its OWN terminal; gives LoadBalancer
+                                                          # services an IP and binds ingress to 127.0.0.1
+                                                          # (asks for sudo — it binds ports 80/443)</span>
+<span class="cmd">$ kubectl port-forward svc/&lt;svc-name&gt; 8080:80</span>           <span class="c"># the always-works fallback</span></code></pre>
+
+<h2 id="o4">4. Wrapping Up a Learning Session</h2>
+<p>A clean lab is a fast lab. Three levels of cleanup, in rising order of finality:</p>
+
+<h3>Level 1 — after every scenario (seconds)</h3>
+<p>Each scenario in this book creates its own namespace, so cleanup is one line:</p>
+<pre><code><span class="cmd">$ kubectl delete namespace &lt;scenario-namespace&gt;</span>
+<span class="out">namespace "bookshelf" deleted</span>            <span class="c"># deletes every object inside it — pods, services,
+                                           # configmaps, PVCs — one command, nothing orphaned</span>
+<span class="c"># PVs from the csi-hostpath driver are reclaimed automatically (Delete policy).
+# Confirm no orphaned PVs linger, and remember cluster-scoped objects a scenario
+# created (ClusterQueues, taints) are NOT namespaced — their cleanup blocks list them:</span>
+<span class="cmd">$ kubectl get pv</span>
+<span class="out">No resources found</span></code></pre>
+
+<h3>Level 2 — end of session (a minute)</h3>
+<pre><code><span class="cmd">$ minikube stop --profile=practice</span>        <span class="c"># cluster state preserved on disk</span>
+<span class="cmd">$ docker system df</span>                        <span class="c"># how much disk Docker is holding</span>
+<span class="out">TYPE            TOTAL   ACTIVE  SIZE      RECLAIMABLE
+Images          14      3       11.2GB    6.4GB (57%)
+Containers      3       0       1.1GB     0B
+Build Cache     42      0       2.1GB     2.1GB</span>
+<span class="cmd">$ docker system prune</span>                     <span class="c"># reclaims dangling images/cache — SAFE while the
+                                            # cluster is stopped; don't add -a (it would delete
+                                            # the minikube base image and slow the next start)</span>
+<span class="c"># Quit Docker Desktop. Done — your Mac is back to normal.</span></code></pre>
+
+<h3>Level 3 — full reset (when a cluster is beyond saving, or you want a fresh start)</h3>
+<pre><code><span class="cmd">$ minikube delete --profile=practice</span>
+<span class="out">🔥  Deleting "practice" in docker ...
+💀  Removed all traces of the "practice" cluster.</span>
+<span class="cmd">$ minikube delete --all</span>                   <span class="c"># nukes every profile (practice, fleet, …)</span>
+<span class="c"># Rebuild anytime with §2.3 + §2.4 — about 3 minutes. Keep your YAML in a git repo
+# (Scenario 8 makes this a habit) and a rebuilt cluster costs you nothing.</span></code></pre>
+
+<div class="callout tip">
+  <span class="label">Habit worth forming</span>
+  Before Level 2, save anything you wrote imperatively: <code>kubectl get deploy,svc,cm -n &lt;ns&gt; -o yaml &gt; my-work.yaml</code>. The cluster is cattle; your manifests are the pet.
+</div>
+
+<h2 id="o5">5. Scaling Up the Lab on an M5 Max (128 GB)</h2>
+<p>The standard 3-node lab fits in 8 GB. Your machine can host something much closer to production shape when a scenario calls for it (Scenarios 7–9 do). Two dials:</p>
+<ol>
+  <li><strong>Docker Desktop VM</strong> — Settings → Resources: <strong>CPUs 12 · Memory 48 GB · Disk 120 GB</strong>. (With 128 GB you could go higher; 48 GB leaves macOS luxurious headroom.) Apply &amp; restart.</li>
+  <li><strong>Cluster size</strong> — build a second, bigger profile alongside <code>practice</code>:</li>
+</ol>
+<pre><code><span class="cmd">$ minikube start --profile=fleet --driver=docker \
+    --ha --nodes=9 --cni=calico \
+    --cpus=2 --memory=4096 --kubernetes-version=v1.34.1</span>
+<span class="c"># --ha: THREE control-plane nodes (real HA topology) + six workers = 9 nodes.
+# 9 × 4 GB = 36 GB inside the 48 GB VM — comfortable.</span>
+
+<span class="cmd">$ kubectl get nodes</span>
+<span class="out">NAME        STATUS   ROLES           AGE   VERSION
+fleet       Ready    control-plane   8m    v1.34.1
+fleet-m02   Ready    control-plane   7m    v1.34.1
+fleet-m03   Ready    control-plane   6m    v1.34.1
+fleet-m04   Ready    &lt;none&gt;          5m    v1.34.1
+...
+fleet-m09   Ready    &lt;none&gt;          2m    v1.34.1</span>
+
+<span class="c"># Switch between clusters (it's just a kubeconfig context):</span>
+<span class="cmd">$ kubectl config use-context fleet</span>
+<span class="cmd">$ kubectl config use-context practice</span>
+<span class="c"># Run one at a time unless the VM has RAM for both: minikube stop --profile=practice first.</span></code></pre>
+
+<div class="callout danger">
+  <span class="label">The GPU truth</span>
+  Your 40-core GPU is invisible to this cluster — macOS containers cannot access Apple's GPU (no Metal inside the Linux VM, no device plugin). Nothing on any local stack changes that today. Scenario 9 uses the honest architecture instead: GPU-accelerated inference runs <em>natively on macOS</em> (Ollama with Metal), and the cluster treats it as an external model backend — which is exactly how real platforms treat GPU pools they don't own. Your CPU cores, however, are fully available, and 12 of them make CPU inference genuinely usable.
+</div>
+<!-- ======================= PART B ======================= -->
+<div class="part-banner demo" id="part-b">
+  <div class="kicker">Part B</div>
+  <h1>Basic Scenarios — Foundation Drills</h1>
+  <p>Three scenarios that turn the core fundamentals into muscle memory: deployments and self-healing, configuration and probes, and storage that outlives its pods.</p>
+</div>
+
+<h2 id="sc1">Scenario 1 — Hello, Cluster: Deploy, Break, Self-Heal</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Deploy a real app, watch the scheduler spread it, then attack it and watch Kubernetes repair everything you break.</td></tr>
+  <tr><th>Time</th><td>~30 minutes</td></tr>
+  <tr><th>Concepts</th><td>Pod lifecycle · kubectl · labels · Deployments · Services</td></tr>
+</table>
+
+<h3>Act 1 — Deploy</h3>
+<pre><code><span class="cmd">$ kubectl create namespace hello</span>
+<span class="cmd">$ kubectl config set-context --current --namespace=hello</span>   <span class="c"># stop typing -n hello everywhere</span>
+
+<span class="cmd">$ kubectl create deployment web --image=nginx:1.27 --replicas=4 --port=80</span>
+<span class="out">deployment.apps/web created</span>
+
+<span class="cmd">$ kubectl get pods -o wide</span>
+<span class="out">NAME                   READY   STATUS    RESTARTS   AGE   IP             NODE
+web-7c9d6b58f4-4kzmq   1/1     Running   0          20s   10.244.120.4   practice-m02
+web-7c9d6b58f4-8xw2l   1/1     Running   0          20s   10.244.151.3   practice-m03
+web-7c9d6b58f4-pv9td   1/1     Running   0          20s   10.244.120.5   practice-m02
+web-7c9d6b58f4-zn6rb   1/1     Running   0          20s   10.244.151.4   practice-m03</span></code></pre>
+<p>Read what the scheduler did: four pods, spread across both workers, none on the control plane — repelled by the taint we added in setup §2.5 — control-plane nodes stay free for cluster management. Now expose them:</p>
+<pre><code><span class="cmd">$ kubectl expose deployment web --port=80</span>
+<span class="cmd">$ kubectl get svc,endpointslices</span>
+<span class="out">NAME          TYPE        CLUSTER-IP      PORT(S)
+service/web   ClusterIP   10.109.44.183   80/TCP
+
+NAME                 ADDRESSTYPE   PORTS   ENDPOINTS
+web-x7k2p            IPv4          80      10.244.120.4,10.244.120.5,10.244.151.3 + 1 more</span></code></pre>
+
+<h3>Act 2 — Attack</h3>
+<p>Open a second terminal and put a live watch on the pods (or use k9s):</p>
+<pre><code><span class="cmd">$ kubectl get pods -w</span>          <span class="c"># terminal 2 — leave it running</span></code></pre>
+<pre><code><span class="c"># Attack ① — kill a pod:</span>
+<span class="cmd">$ kubectl delete pod web-7c9d6b58f4-4kzmq</span>
+<span class="c"># Terminal 2 shows the kill AND the replacement, within seconds:</span>
+<span class="out">web-7c9d6b58f4-4kzmq   1/1     Terminating   0     3m
+web-7c9d6b58f4-hh5wd   0/1     Pending       0     0s
+web-7c9d6b58f4-hh5wd   0/1     ContainerCreating   0     0s
+web-7c9d6b58f4-hh5wd   1/1     Running       0     2s</span>
+
+<span class="c"># Attack ② — kill them ALL:</span>
+<span class="cmd">$ kubectl delete pods --all</span>
+<span class="c"># All four die; four replacements appear. The deployment's rule: exactly 4. No more, no less.</span>
+
+<span class="c"># Attack ③ — steal a pod's identity (the label-theft experiment, live):</span>
+<span class="cmd">$ kubectl label pod &lt;any-web-pod&gt; app-</span>
+<span class="cmd">$ kubectl get pods --show-labels</span>
+<span class="out">NAME                   ...   LABELS
+web-7c9d6b58f4-hh5wd   ...   app=web,pod-template-hash=7c9d6b58f4
+web-7c9d6b58f4-mm3fk   ...   pod-template-hash=7c9d6b58f4     ← the orphan: still running, unmanaged
+web-7c9d6b58f4-q2v8x   ...   app=web,pod-template-hash=7c9d6b58f4
+web-7c9d6b58f4-tt7lg   ...   app=web,pod-template-hash=7c9d6b58f4
+web-7c9d6b58f4-wz4jn   ...   app=web,pod-template-hash=7c9d6b58f4   ← the replacement (now 5 pods!)</span>
+<span class="c"># Put the label back and watch the deployment delete one to get back to 4:</span>
+<span class="cmd">$ kubectl label pod web-7c9d6b58f4-mm3fk app=web</span></code></pre>
+
+<h3>Act 3 — Node failure (the real test)</h3>
+<pre><code><span class="c"># Simulate a node going dark — pause its container on the Docker side:</span>
+<span class="cmd">$ docker pause practice-m03</span>
+<span class="cmd">$ kubectl get nodes -w</span>
+<span class="out">practice-m03   NotReady   &lt;none&gt;   52m   v1.34.1</span>     <span class="c"># after ~40s of missed heartbeats</span>
+<span class="c"># Wait ~5 minutes (the default eviction tolerance) and the pods on m03 are
+# rescheduled to m02. Then heal the node:</span>
+<span class="cmd">$ docker unpause practice-m03</span>
+<span class="out">practice-m03   Ready      &lt;none&gt;   58m   v1.34.1</span></code></pre>
+<div class="callout tip">
+  <span class="label">What you just proved</span>
+  The three classic disasters of manual container management — dead containers, dead pods, dead node — repaired without you doing anything. That's the whole pitch of Kubernetes, demonstrated on your laptop.
+</div>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ kubectl delete namespace hello</span>
+<span class="cmd">$ kubectl config set-context --current --namespace=default</span></code></pre>
+
+<h2 id="sc2">Scenario 2 — The Config Kitchen: ConfigMaps, Secrets &amp; Probes</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Run one app three ways — hardcoded, configured, probed — and watch a liveness probe save you from a real hang.</td></tr>
+  <tr><th>Time</th><td>~45 minutes</td></tr>
+  <tr><th>Concepts</th><td>Requests/limits · probes · statelessness · ConfigMaps · Secrets · logs</td></tr>
+</table>
+
+<h3>Act 1 — A configurable app in 20 lines</h3>
+<pre><code><span class="cmd">$ kubectl create namespace kitchen &amp;&amp; kubectl config set-context --current --namespace=kitchen</span>
+
+<span class="c"># kitchen-app.yaml — a tiny Python diner that reads its menu from the environment:</span>
+<span class="k">apiVersion:</span> <span class="s">v1</span>
+<span class="k">kind:</span> <span class="s">ConfigMap</span>
+<span class="k">metadata:</span>
+  <span class="k">name:</span> <span class="s">menu</span>
+<span class="k">data:</span>
+  <span class="k">DISH_OF_DAY:</span> <span class="s">"chocolate ice cream"</span>     <span class="c"># a YAML classic</span>
+  <span class="k">GREETING:</span> <span class="s">"Welcome to the Config Kitchen"</span>
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">v1</span>
+<span class="k">kind:</span> <span class="s">Secret</span>
+<span class="k">metadata:</span>
+  <span class="k">name:</span> <span class="s">house-secret</span>
+<span class="k">stringData:</span>
+  <span class="k">SECRET_INGREDIENT:</span> <span class="s">"cardamom"</span>
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">apps/v1</span>
+<span class="k">kind:</span> <span class="s">Deployment</span>
+<span class="k">metadata:</span>
+  <span class="k">name:</span> <span class="s">diner</span>
+<span class="k">spec:</span>
+  <span class="k">replicas:</span> <span class="s">2</span>
+  <span class="k">selector:</span>
+    <span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">diner</span>}
+  <span class="k">template:</span>
+    <span class="k">metadata:</span>
+      <span class="k">labels:</span> {<span class="k">app:</span> <span class="s">diner</span>}
+    <span class="k">spec:</span>
+      <span class="k">containers:</span>
+      - <span class="k">name:</span> <span class="s">diner</span>
+        <span class="k">image:</span> <span class="s">python:3.12-alpine</span>
+        <span class="k">command:</span> [<span class="s">python</span>, <span class="s">-c</span>]
+        <span class="k">args:</span>
+        - |
+          import http.server, os, json
+          class H(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  body = json.dumps({
+                      "greeting": os.environ.get("GREETING","(unset)"),
+                      "dish": os.environ.get("DISH_OF_DAY","(unset)"),
+                      "secret_ingredient": os.environ.get("SECRET_INGREDIENT","(unset)"),
+                      "pod": os.environ.get("HOSTNAME")}).encode()
+                  self.send_response(200); self.end_headers(); self.wfile.write(body)
+          http.server.HTTPServer(("",8080), H).serve_forever()
+        <span class="k">envFrom:</span>
+        - <span class="k">configMapRef:</span> {<span class="k">name:</span> <span class="s">menu</span>}
+        - <span class="k">secretRef:</span> {<span class="k">name:</span> <span class="s">house-secret</span>}
+        <span class="k">resources:</span>
+          <span class="k">requests:</span> {<span class="k">cpu:</span> <span class="s">50m</span>, <span class="k">memory:</span> <span class="s">64Mi</span>}
+          <span class="k">limits:</span> {<span class="k">cpu:</span> <span class="s">250m</span>, <span class="k">memory:</span> <span class="s">128Mi</span>}</code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f kitchen-app.yaml</span>
+<span class="cmd">$ kubectl expose deployment diner --port=80 --target-port=8080</span>
+<span class="cmd">$ kubectl run taster --image=busybox --restart=Never --rm -it -- wget -qO- diner</span>
+<span class="out">{"greeting": "Welcome to the Config Kitchen", "dish": "chocolate ice cream",
+ "secret_ingredient": "cardamom", "pod": "diner-6f8b9c7d55-k2xwq"}</span></code></pre>
+
+<h3>Act 2 — Change config without touching the app</h3>
+<pre><code><span class="cmd">$ kubectl patch configmap menu -p '{"data":{"DISH_OF_DAY":"mango sticky rice"}}'</span>
+<span class="cmd">$ kubectl run taster --image=busybox --restart=Never --rm -it -- wget -qO- diner</span>
+<span class="out">... "dish": "chocolate ice cream" ...</span>       <span class="c"># STILL the old dish! Why?</span></code></pre>
+<div class="callout warn">
+  <span class="label">The lesson hiding here</span>
+  Env vars from a ConfigMap are read <em>once, at container start</em>. The ConfigMap changed; the running containers didn't. Fix: restart the pods — <code>kubectl rollout restart deployment diner</code> — and taste again: <code>"dish": "mango sticky rice"</code>. This “why is my config change not applying?!” moment is one of the most common real-world confusions; you've now debugged it on purpose.
+</div>
+
+<h3>Act 3 — Probes that earn their keep</h3>
+<p>Add an endpoint that lets you <em>hang</em> the app on demand, plus a liveness probe. Replace the deployment's args with this extended version and add the probe:</p>
+<pre><code>        <span class="k">args:</span>
+        - |
+          import http.server, os, json, time
+          WEDGED = {"v": False}
+          class H(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  if self.path == "/wedge": WEDGED["v"] = True
+                  if WEDGED["v"]: time.sleep(3600)          <span class="c"># simulate a deadlocked app</span>
+                  self.send_response(200); self.end_headers()
+                  self.wfile.write(json.dumps({"ok": True,
+                      "pod": os.environ.get("HOSTNAME")}).encode())
+          http.server.HTTPServer(("",8080), H).serve_forever()
+        <span class="k">livenessProbe:</span>
+          <span class="k">httpGet:</span> {<span class="k">path:</span> <span class="s">/healthz</span>, <span class="k">port:</span> <span class="s">8080</span>}
+          <span class="k">initialDelaySeconds:</span> <span class="s">3</span>
+          <span class="k">periodSeconds:</span> <span class="s">5</span>
+          <span class="k">timeoutSeconds:</span> <span class="s">1</span>
+          <span class="k">failureThreshold:</span> <span class="s">3</span></code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f kitchen-app.yaml &amp;&amp; kubectl rollout status deploy/diner</span>
+<span class="c"># Wedge one pod through the service, then watch:</span>
+<span class="cmd">$ kubectl run wedger --image=busybox --restart=Never --rm -it -- wget -qO- -T 2 diner/wedge</span>
+<span class="out">wget: download timed out</span>                    <span class="c"># expected — the pod is now hung forever</span>
+<span class="cmd">$ kubectl get pods -w</span>
+<span class="out">diner-59d7f6c9b8-k2xwq   1/1   Running   0             4m
+diner-59d7f6c9b8-k2xwq   1/1   Running   1 (2s ago)    4m</span>   <span class="c"># RESTARTS: 0 → 1</span></code></pre>
+<p>Do the math against the probe settings: hang at t=0; probes fail at ~5, ~10, ~15 s (each timing out after 1 s); third consecutive strike → kubelet kills and restarts the container. Total ~16–18 seconds from deadlock to recovery, <em>no human involved</em>. Check the evidence trail:</p>
+<pre><code><span class="cmd">$ kubectl describe pod diner-59d7f6c9b8-k2xwq | grep -A3 Events</span>
+<span class="out">Events:
+  Warning  Unhealthy  61s (x3 over 71s)  kubelet  Liveness probe failed: ... context deadline exceeded
+  Normal   Killing    61s                kubelet  Container diner failed liveness probe, will be restarted</span></code></pre>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ kubectl delete namespace kitchen &amp;&amp; kubectl config set-context --current --namespace=default</span></code></pre>
+
+<h2 id="sc3">Scenario 3 — Storage That Survives: PVCs, a Database &amp; Snapshots</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Run PostgreSQL with a real PVC, destroy the pod and keep the data, then take a CSI snapshot and restore from it — the full storage lifecycle.</td></tr>
+  <tr><th>Time</th><td>~45 minutes</td></tr>
+  <tr><th>Concepts</th><td>StorageClass → PV → PVC · Secrets · snapshots · StatefulSets preview</td></tr>
+</table>
+
+<h3>Act 1 — Dynamic provisioning (what manual PV provisioning grows up into)</h3>
+<pre><code><span class="cmd">$ kubectl create namespace vault &amp;&amp; kubectl config set-context --current --namespace=vault</span>
+<span class="cmd">$ kubectl get storageclass</span>
+<span class="out">NAME                 PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE
+csi-hostpath-sc      hostpath.csi.k8s.io      Delete          Immediate
+standard (default)   k8s.io/minikube-hostpath Delete          Immediate</span></code></pre>
+<pre><code><span class="c"># postgres.yaml — Secret + PVC + Deployment (note: csi-hostpath-sc, snapshot-capable):</span>
+<span class="k">apiVersion:</span> <span class="s">v1</span>
+<span class="k">kind:</span> <span class="s">Secret</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">pg-secret</span>}
+<span class="k">stringData:</span> {<span class="k">POSTGRES_PASSWORD:</span> <span class="s">practice123</span>}
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">v1</span>
+<span class="k">kind:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">pg-data</span>}
+<span class="k">spec:</span>
+  <span class="k">storageClassName:</span> <span class="s">csi-hostpath-sc</span>
+  <span class="k">accessModes:</span> [<span class="s">ReadWriteOnce</span>]
+  <span class="k">resources:</span> {<span class="k">requests:</span> {<span class="k">storage:</span> <span class="s">2Gi</span>}}
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">apps/v1</span>
+<span class="k">kind:</span> <span class="s">Deployment</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">postgres</span>}
+<span class="k">spec:</span>
+  <span class="k">replicas:</span> <span class="s">1</span>
+  <span class="k">strategy:</span> {<span class="k">type:</span> <span class="s">Recreate</span>}     <span class="c"># RWO volume: never two pods at once during updates</span>
+  <span class="k">selector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">postgres</span>}}
+  <span class="k">template:</span>
+    <span class="k">metadata:</span> {<span class="k">labels:</span> {<span class="k">app:</span> <span class="s">postgres</span>}}
+    <span class="k">spec:</span>
+      <span class="k">containers:</span>
+      - <span class="k">name:</span> <span class="s">postgres</span>
+        <span class="k">image:</span> <span class="s">postgres:17-alpine</span>
+        <span class="k">envFrom:</span> [{<span class="k">secretRef:</span> {<span class="k">name:</span> <span class="s">pg-secret</span>}}]
+        <span class="k">env:</span> [{<span class="k">name:</span> <span class="s">PGDATA</span>, <span class="k">value:</span> <span class="s">/var/lib/postgresql/data/pgdata</span>}]
+        <span class="k">ports:</span> [{<span class="k">containerPort:</span> <span class="s">5432</span>}]
+        <span class="k">volumeMounts:</span> [{<span class="k">name:</span> <span class="s">data</span>, <span class="k">mountPath:</span> <span class="s">/var/lib/postgresql/data</span>}]
+      <span class="k">volumes:</span>
+      - <span class="k">name:</span> <span class="s">data</span>
+        <span class="k">persistentVolumeClaim:</span> {<span class="k">claimName:</span> <span class="s">pg-data</span>}</code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f postgres.yaml</span>
+<span class="cmd">$ kubectl get pvc,pv</span>
+<span class="out">NAME                            STATUS   VOLUME         CAPACITY   ACCESS MODES   STORAGECLASS
+persistentvolumeclaim/pg-data   Bound    pvc-8a1f3c2e   2Gi        RWO            csi-hostpath-sc
+
+NAME                            CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM
+persistentvolume/pvc-8a1f3c2e   2Gi        RWO            Delete           Bound    vault/pg-data</span>
+<span class="c"># Notice: you wrote NO PersistentVolume. The CSI driver minted one on demand —
+# dynamic provisioning, the grown-up version of hand-writing PersistentVolumes.</span></code></pre>
+
+<h3>Act 2 — Write data, murder the pod, data survives</h3>
+<pre><code><span class="cmd">$ kubectl exec -it deploy/postgres -- psql -U postgres -c \
+  "CREATE TABLE heroes(name text); INSERT INTO heroes VALUES ('Superman'),('Batman'),('Wonder Woman'),('Flash');"</span>
+<span class="out">INSERT 0 4</span>
+
+<span class="cmd">$ kubectl delete pod -l app=postgres</span>       <span class="c"># murder</span>
+<span class="cmd">$ kubectl get pods -w</span>                       <span class="c"># wait for the replacement to be 1/1 Running</span>
+<span class="cmd">$ kubectl exec -it deploy/postgres -- psql -U postgres -c "SELECT * FROM heroes;"</span>
+<span class="out">     name
+--------------
+ Superman
+ Batman
+ Wonder Woman
+ Flash
+(4 rows)</span>                                   <span class="c"># new pod, same data — the PVC did its job</span></code></pre>
+
+<h3>Act 3 — Snapshot, disaster, restore</h3>
+<pre><code><span class="c"># snapshot.yaml:</span>
+<span class="k">apiVersion:</span> <span class="s">snapshot.storage.k8s.io/v1</span>
+<span class="k">kind:</span> <span class="s">VolumeSnapshot</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">pg-snap-1</span>}
+<span class="k">spec:</span>
+  <span class="k">volumeSnapshotClassName:</span> <span class="s">csi-hostpath-snapclass</span>
+  <span class="k">source:</span> {<span class="k">persistentVolumeClaimName:</span> <span class="s">pg-data</span>}</code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f snapshot.yaml &amp;&amp; kubectl get volumesnapshot</span>
+<span class="out">NAME        READYTOUSE   SOURCEPVC   RESTORESIZE   AGE
+pg-snap-1   true         pg-data     2Gi           10s</span>
+
+<span class="c"># Now the "disaster" — an intern with prod access:</span>
+<span class="cmd">$ kubectl exec -it deploy/postgres -- psql -U postgres -c "DROP TABLE heroes;"</span>
+<span class="out">DROP TABLE</span>
+
+<span class="c"># Restore: a NEW PVC born from the snapshot, then point postgres at it —</span>
+<span class="k">apiVersion:</span> <span class="s">v1</span>
+<span class="k">kind:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">pg-data-restored</span>}
+<span class="k">spec:</span>
+  <span class="k">storageClassName:</span> <span class="s">csi-hostpath-sc</span>
+  <span class="k">dataSource:</span>
+    <span class="k">name:</span> <span class="s">pg-snap-1</span>
+    <span class="k">kind:</span> <span class="s">VolumeSnapshot</span>
+    <span class="k">apiGroup:</span> <span class="s">snapshot.storage.k8s.io</span>
+  <span class="k">accessModes:</span> [<span class="s">ReadWriteOnce</span>]
+  <span class="k">resources:</span> {<span class="k">requests:</span> {<span class="k">storage:</span> <span class="s">2Gi</span>}}</code></pre>
+<pre><code><span class="c"># Edit postgres.yaml: claimName: pg-data → pg-data-restored, then:</span>
+<span class="cmd">$ kubectl apply -f pg-restore-pvc.yaml &amp;&amp; kubectl apply -f postgres.yaml</span>
+<span class="cmd">$ kubectl exec -it deploy/postgres -- psql -U postgres -c "SELECT count(*) FROM heroes;"</span>
+<span class="out"> count
+-------
+     4</span>                                     <span class="c"># the table is back. You just ran a
+                                             # point-in-time restore, on a laptop.</span></code></pre>
+
+<div class="callout exam">
+  <span class="label">Stretch goal</span>
+  Rewrite the postgres Deployment as a <strong>StatefulSet</strong> with a <code>volumeClaimTemplates</code> block and a headless Service — then scale it to 2 and inspect what's different about the pod names, DNS records, and the second PVC that appears. That's the StatefulSet model, made real.
+</div>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ kubectl delete namespace vault &amp;&amp; kubectl config set-context --current --namespace=default</span>
+<span class="cmd">$ kubectl get pv</span>    <span class="c"># confirm the dynamic PVs were reclaimed (Delete policy)</span></code></pre>
+<!-- ======================= PART C ======================= -->
+<div class="part-banner" id="part-c">
+  <div class="kicker">Part C</div>
+  <h1>Medium Scenarios — Building Real Systems</h1>
+  <p>A complete three-tier application with L7 routing and autoscaling, a security lockdown, and a gauntlet of pre-broken systems to diagnose.</p>
+</div>
+
+<h2 id="sc4">Scenario 4 — Bookshelf: A Three-Tier App with Ingress &amp; Autoscaling</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Assemble frontend → API → database with Services and Ingress, then load-test it and watch the HPA scale the API tier in real time.</td></tr>
+  <tr><th>Time</th><td>~90 minutes</td></tr>
+  <tr><th>Concepts</th><td>Deployments &amp; rollouts · Services · Ingress · HPA/metrics</td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 920 250" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Arial,sans-serif">
+  <defs><marker id="ba" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker></defs>
+  <rect x="20" y="90" width="140" height="70" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="1.6"/>
+  <text x="90" y="118" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b45309">Your browser</text>
+  <text x="90" y="138" text-anchor="middle" font-size="10.5" fill="#66738a">bookshelf.local</text>
+  <rect x="215" y="80" width="160" height="90" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="1.6"/>
+  <text x="295" y="106" text-anchor="middle" font-size="12.5" font-weight="700" fill="#6d28d9">Ingress (nginx)</text>
+  <text x="295" y="126" text-anchor="middle" font-size="10" fill="#66738a">/        → frontend</text>
+  <text x="295" y="142" text-anchor="middle" font-size="10" fill="#66738a">/api/... → api</text>
+  <text x="295" y="158" text-anchor="middle" font-size="10" fill="#66738a">via minikube tunnel :80</text>
+  <rect x="430" y="20" width="200" height="80" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6"/>
+  <text x="530" y="48" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e40af">frontend ×2</text>
+  <text x="530" y="66" text-anchor="middle" font-size="10.5" fill="#66738a">nginx serving the UI</text>
+  <text x="530" y="82" text-anchor="middle" font-size="10.5" fill="#66738a">svc: frontend:80</text>
+  <rect x="430" y="140" width="200" height="80" rx="10" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.6"/>
+  <text x="530" y="164" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">api ×2 → HPA 2–10</text>
+  <text x="530" y="182" text-anchor="middle" font-size="10.5" fill="#66738a">Python REST + CPU work</text>
+  <text x="530" y="198" text-anchor="middle" font-size="10.5" fill="#66738a">svc: api:80 → :8080</text>
+  <rect x="700" y="140" width="190" height="80" rx="10" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.6"/>
+  <text x="795" y="168" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b91c1c">postgres ×1</text>
+  <text x="795" y="186" text-anchor="middle" font-size="10.5" fill="#66738a">PVC-backed (Scenario 3)</text>
+  <text x="795" y="202" text-anchor="middle" font-size="10.5" fill="#66738a">svc: db:5432</text>
+  <line x1="160" y1="125" x2="211" y2="125" stroke="#2563eb" stroke-width="2" marker-end="url(#ba)"/>
+  <line x1="375" y1="105" x2="426" y2="70" stroke="#2563eb" stroke-width="2" marker-end="url(#ba)"/>
+  <line x1="375" y1="145" x2="426" y2="175" stroke="#2563eb" stroke-width="2" marker-end="url(#ba)"/>
+  <line x1="630" y1="180" x2="696" y2="180" stroke="#2563eb" stroke-width="2" marker-end="url(#ba)"/>
+</svg>
+<figcaption>Figure 2 — Bookshelf: two stateless tiers behind an Ingress, one stateful tier behind a ClusterIP service.</figcaption>
+</figure>
+
+<h3>Act 1 — The database tier</h3>
+<pre><code><span class="cmd">$ kubectl create namespace bookshelf &amp;&amp; kubectl config set-context --current --namespace=bookshelf</span>
+<span class="c"># Reuse Scenario 3's postgres.yaml (Secret + PVC + Deployment), then:</span>
+<span class="cmd">$ kubectl apply -f postgres.yaml</span>
+<span class="cmd">$ kubectl expose deployment postgres --name=db --port=5432</span>
+<span class="cmd">$ kubectl exec -it deploy/postgres -- psql -U postgres -c \
+  "CREATE TABLE books(id serial, title text, author text);
+   INSERT INTO books(title,author) VALUES
+   ('The Phoenix Project','Kim'),('Designing Data-Intensive Applications','Kleppmann'),
+   ('Site Reliability Engineering','Beyer'),('Kubernetes Up and Running','Hightower');"</span>
+<span class="out">INSERT 0 4</span></code></pre>
+
+<h3>Act 2 — The API tier (with real CPU work for the HPA to feel)</h3>
+<pre><code><span class="c"># api.yaml — Deployment + Service. The /api/books endpoint queries postgres;
+# /api/work burns ~200ms of CPU per call (our load-test target):</span>
+<span class="k">apiVersion:</span> <span class="s">apps/v1</span>
+<span class="k">kind:</span> <span class="s">Deployment</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">api</span>}
+<span class="k">spec:</span>
+  <span class="k">replicas:</span> <span class="s">2</span>
+  <span class="k">selector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">api</span>}}
+  <span class="k">template:</span>
+    <span class="k">metadata:</span> {<span class="k">labels:</span> {<span class="k">app:</span> <span class="s">api</span>}}
+    <span class="k">spec:</span>
+      <span class="k">containers:</span>
+      - <span class="k">name:</span> <span class="s">api</span>
+        <span class="k">image:</span> <span class="s">python:3.12-slim</span>   <span class="c"># slim, not alpine: psycopg2-binary wheels are guaranteed on glibc</span>
+        <span class="k">command:</span> [<span class="s">sh</span>, <span class="s">-c</span>]
+        <span class="k">args:</span>
+        - |
+          pip install --quiet flask psycopg2-binary gunicorn &amp;&amp; exec gunicorn -b 0.0.0.0:8080 -w 2 app:app
+        <span class="k">workingDir:</span> <span class="s">/app</span>
+        <span class="k">env:</span>
+        - {<span class="k">name:</span> <span class="s">PGPASSWORD</span>, <span class="k">valueFrom:</span> {<span class="k">secretKeyRef:</span> {<span class="k">name:</span> <span class="s">pg-secret</span>, <span class="k">key:</span> <span class="s">POSTGRES_PASSWORD</span>}}}
+        <span class="k">volumeMounts:</span> [{<span class="k">name:</span> <span class="s">code</span>, <span class="k">mountPath:</span> <span class="s">/app</span>}]
+        <span class="k">resources:</span>
+          <span class="k">requests:</span> {<span class="k">cpu:</span> <span class="s">200m</span>, <span class="k">memory:</span> <span class="s">128Mi</span>}   <span class="c"># HPA percentages are OF THIS number</span>
+          <span class="k">limits:</span> {<span class="k">cpu:</span> <span class="s">500m</span>, <span class="k">memory:</span> <span class="s">256Mi</span>}
+        <span class="k">readinessProbe:</span>
+          <span class="k">httpGet:</span> {<span class="k">path:</span> <span class="s">/api/books</span>, <span class="k">port:</span> <span class="s">8080</span>}
+          <span class="k">initialDelaySeconds:</span> <span class="s">10</span>
+          <span class="k">periodSeconds:</span> <span class="s">5</span>
+      <span class="k">volumes:</span>
+      - <span class="k">name:</span> <span class="s">code</span>
+        <span class="k">configMap:</span> {<span class="k">name:</span> <span class="s">api-code</span>}</code></pre>
+<pre><code><span class="c"># The code itself lives in a ConfigMap (configuration decoupled from the container, in practice):</span>
+<span class="cmd">$ cat &lt;&lt;'EOF' &gt; app.py
+from flask import Flask, jsonify
+import psycopg2, os, math
+app = Flask(__name__)
+def db(): return psycopg2.connect(host="db", user="postgres", password=os.environ["PGPASSWORD"])
+@app.route("/api/books")
+def books():
+    with db() as c, c.cursor() as cur:
+        cur.execute("SELECT title, author FROM books ORDER BY id")
+        return jsonify([{"title": t, "author": a} for t, a in cur.fetchall()])
+@app.route("/api/work")
+def work():
+    x = 0.0001
+    for _ in range(1_500_000): x = math.sqrt(x + 1.7)   # ~200ms of honest CPU burn
+    return jsonify({"pod": os.environ.get("HOSTNAME"), "result": x})
+EOF</span>
+<span class="cmd">$ kubectl create configmap api-code --from-file=app.py</span>
+<span class="cmd">$ kubectl apply -f api.yaml</span>
+<span class="cmd">$ kubectl expose deployment api --port=80 --target-port=8080</span>
+<span class="cmd">$ kubectl run test --image=busybox --restart=Never --rm -it -- wget -qO- api/api/books</span>
+<span class="out">[{"author":"Kim","title":"The Phoenix Project"}, ...]</span></code></pre>
+
+<h3>Act 3 — Frontend + Ingress</h3>
+<pre><code><span class="cmd">$ kubectl create configmap ui --from-literal=index.html='&lt;html&gt;&lt;body style="font-family:sans-serif">
+  &lt;h1&gt;📚 Bookshelf&lt;/h1&gt;&lt;ul id="b"&gt;&lt;/ul&gt;
+  &lt;script&gt;fetch("/api/books").then(r=&gt;r.json()).then(d=&gt;
+    b.innerHTML=d.map(x=&gt;`&lt;li&gt;${x.title} — ${x.author}`).join(""))&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;'</span>
+<span class="cmd">$ kubectl create deployment frontend --image=nginx:1.27 --replicas=2 --port=80</span>
+<span class="c"># Mount the ConfigMap over /usr/share/nginx/html — safe to obliterate that whole
+# directory since our index.html replaces nginx's default (contrast: Scenario 6, drill 5):</span>
+<span class="cmd">$ kubectl patch deployment frontend --patch '
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        volumeMounts: [{name: ui, mountPath: /usr/share/nginx/html}]
+      volumes: [{name: ui, configMap: {name: ui}}]'</span>
+<span class="cmd">$ kubectl expose deployment frontend --port=80</span>
+
+<span class="c"># ingress.yaml — one host, two paths:</span>
+<span class="k">apiVersion:</span> <span class="s">networking.k8s.io/v1</span>
+<span class="k">kind:</span> <span class="s">Ingress</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">bookshelf</span>}
+<span class="k">spec:</span>
+  <span class="k">rules:</span>
+  - <span class="k">host:</span> <span class="s">bookshelf.local</span>
+    <span class="k">http:</span>
+      <span class="k">paths:</span>
+      - {<span class="k">path:</span> <span class="s">/api</span>, <span class="k">pathType:</span> <span class="s">Prefix</span>, <span class="k">backend:</span> {<span class="k">service:</span> {<span class="k">name:</span> <span class="s">api</span>, <span class="k">port:</span> {<span class="k">number:</span> <span class="s">80</span>}}}}
+      - {<span class="k">path:</span> <span class="s">/</span>,    <span class="k">pathType:</span> <span class="s">Prefix</span>, <span class="k">backend:</span> {<span class="k">service:</span> {<span class="k">name:</span> <span class="s">frontend</span>, <span class="k">port:</span> {<span class="k">number:</span> <span class="s">80</span>}}}}</code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f ingress.yaml</span>
+<span class="cmd">$ echo "127.0.0.1 bookshelf.local" | sudo tee -a /etc/hosts</span>
+<span class="cmd">$ minikube tunnel --profile=practice</span>        <span class="c"># separate terminal, leave running (asks for sudo)</span>
+<span class="cmd">$ curl -s bookshelf.local/api/books | head -c 60</span>
+<span class="out">[{"author":"Kim","title":"The Phoenix Project"},{"author":"K</span>
+<span class="c"># And open http://bookshelf.local in your browser: your book list, served
+# by the frontend, fetched from the API, read from postgres. Three tiers, one URL.</span></code></pre>
+
+<h3>Act 4 — Autoscaling under fire</h3>
+<pre><code><span class="cmd">$ kubectl autoscale deployment api --cpu-percent=60 --min=2 --max=10</span>
+<span class="cmd">$ kubectl get hpa -w</span>                         <span class="c"># terminal 2 — the show</span>
+
+<span class="c"># terminal 3 — sustained load: 6 parallel clients hammering /api/work:</span>
+<span class="cmd">$ kubectl run load --image=busybox --restart=Never -- /bin/sh -c \
+  "for i in 1 2 3 4 5 6; do (while true; do wget -qO- api/api/work &gt;/dev/null; done) &amp; done; sleep 600"</span>
+
+<span class="c"># terminal 2, over ~3 minutes:</span>
+<span class="out">NAME   REFERENCE        TARGETS         MINPODS   MAXPODS   REPLICAS
+api    Deployment/api   cpu: 41%/60%    2         10        2
+api    Deployment/api   cpu: 212%/60%   2         10        2
+api    Deployment/api   cpu: 212%/60%   2         10        4        ← scale-out begins
+api    Deployment/api   cpu: 118%/60%   2         10        8
+api    Deployment/api   cpu: 57%/60%    2         10        8        ← steady state found</span>
+
+<span class="cmd">$ kubectl delete pod load</span>                    <span class="c"># stop the siege…</span>
+<span class="c"># …and ~5 minutes later (default scale-down stabilization window) watch the HPA
+# walk the API tier back to 2. Patience here IS the lesson: HPAs scale up fast, down slow.</span></code></pre>
+
+<h3>Act 5 — Ship v2 with zero downtime</h3>
+<pre><code><span class="c"># terminal 2 — a client's-eye view during the rollout:</span>
+<span class="cmd">$ while true; do curl -s bookshelf.local/api/books -o /dev/null -w "%{http_code} "; sleep 0.3; done</span>
+<span class="c"># terminal 1 — change the code, roll it out:</span>
+<span class="cmd">$ sed -i '' 's/ORDER BY id/ORDER BY title/' app.py</span>
+<span class="cmd">$ kubectl create configmap api-code --from-file=app.py -o yaml --dry-run=client | kubectl apply -f -</span>
+<span class="cmd">$ kubectl rollout restart deployment api &amp;&amp; kubectl rollout status deployment api</span>
+<span class="out">Waiting for deployment "api" rollout to finish: 1 old replicas are pending termination...
+deployment "api" successfully rolled out</span>
+<span class="c"># terminal 2 shows an unbroken wall of "200 200 200 200" — the readiness probe
+# gated traffic while new pods warmed up. That's the rolling-update promise, verified.
+# Regret it? kubectl rollout undo deployment api.</span></code></pre>
+
+<h4>Act 5b — Now watch the probe save a BAD rollout</h4>
+<pre><code><span class="c"># Ship a broken "v3": point the readiness probe at a path that doesn't exist —</span>
+<span class="cmd">$ kubectl patch deployment api --type=json -p \
+  '[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/path","value":"/api/nope"}]'</span>
+<span class="cmd">$ kubectl rollout status deployment api</span>
+<span class="out">Waiting for deployment "api" rollout to finish: 1 out of 2 new replicas have been updated...</span>
+<span class="c"># …and it WAITS THERE FOREVER. Meanwhile terminal 2: still all 200s. Investigate:</span>
+<span class="cmd">$ kubectl get pods</span>
+<span class="out">api-5d8c7b9f66-w2kqm   0/1     Running   0     2m</span>   <span class="c"># new pod up but NEVER Ready (0/1) —
+                                                       # so the rollout never proceeds and old
+                                                       # pods keep serving. Failed deploy, zero
+                                                       # user impact. That's the design.</span>
+<span class="cmd">$ kubectl rollout undo deployment api</span>
+<span class="out">deployment.apps/api rolled back</span></code></pre>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ kubectl delete namespace bookshelf &amp;&amp; kubectl config set-context --current --namespace=default</span>
+<span class="cmd">$ sudo sed -i '' '/bookshelf.local/d' /etc/hosts</span>   <span class="c"># and Ctrl-C the tunnel</span></code></pre>
+
+<h2 id="sc5">Scenario 5 — Lock It Down: NetworkPolicies &amp; RBAC</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Take Bookshelf from “peace and love” to zero-trust: default-deny networking with surgical allows, then a developer identity that can see but not touch.</td></tr>
+  <tr><th>Time</th><td>~60 minutes</td></tr>
+  <tr><th>Concepts</th><td>NetworkPolicies · RBAC &amp; ServiceAccounts</td></tr>
+  <tr><th>Prereq</th><td>Scenario 4 deployed (or redeploy its Acts 1–3 quickly — good revision anyway).</td></tr>
+</table>
+
+<h3>Act 1 — Prove the problem</h3>
+<pre><code><span class="cmd">$ kubectl create namespace intruder</span>
+<span class="cmd">$ kubectl run spy -n intruder --image=busybox --restart=Never --rm -it -- \
+    sh -c "wget -qO- api.bookshelf/api/books | head -c 50"</span>
+<span class="out">[{"author":"Kim","title":"The Phoenix Project"},{"auth</span>
+<span class="c"># A pod in a DIFFERENT namespace just read your API — and could reach postgres
+# on 5432 too. Everybody can talk to everybody. Peace and love; security nightmare.</span></code></pre>
+
+<h3>Act 2 — Default deny, then earn each connection back</h3>
+<pre><code><span class="c"># lockdown.yaml — three policies that express the app's real contract:</span>
+<span class="k">apiVersion:</span> <span class="s">networking.k8s.io/v1</span>
+<span class="k">kind:</span> <span class="s">NetworkPolicy</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">default-deny</span>, <span class="k">namespace:</span> <span class="s">bookshelf</span>}
+<span class="k">spec:</span>
+  <span class="k">podSelector:</span> <span class="s">{}</span>
+  <span class="k">policyTypes:</span> [<span class="s">Ingress</span>]        <span class="c"># ingress-only deny: pods can still reach DNS/outward</span>
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">networking.k8s.io/v1</span>
+<span class="k">kind:</span> <span class="s">NetworkPolicy</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">db-from-api-only</span>, <span class="k">namespace:</span> <span class="s">bookshelf</span>}
+<span class="k">spec:</span>
+  <span class="k">podSelector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">postgres</span>}}
+  <span class="k">policyTypes:</span> [<span class="s">Ingress</span>]
+  <span class="k">ingress:</span>
+  - <span class="k">from:</span> [{<span class="k">podSelector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">api</span>}}}]
+    <span class="k">ports:</span> [{<span class="k">protocol:</span> <span class="s">TCP</span>, <span class="k">port:</span> <span class="s">5432</span>}]
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">networking.k8s.io/v1</span>
+<span class="k">kind:</span> <span class="s">NetworkPolicy</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">api-from-frontend-and-ingress</span>, <span class="k">namespace:</span> <span class="s">bookshelf</span>}
+<span class="k">spec:</span>
+  <span class="k">podSelector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">api</span>}}
+  <span class="k">policyTypes:</span> [<span class="s">Ingress</span>]
+  <span class="k">ingress:</span>
+  - <span class="k">from:</span>
+    - <span class="k">podSelector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">frontend</span>}}
+    - <span class="k">namespaceSelector:</span>          <span class="c"># the ingress controller lives in ANOTHER namespace —</span>
+        <span class="k">matchLabels:</span>               <span class="c"># without this clause, bookshelf.local/api goes dark</span>
+          <span class="k">kubernetes.io/metadata.name:</span> <span class="s">ingress-nginx</span>
+    <span class="k">ports:</span> [{<span class="k">protocol:</span> <span class="s">TCP</span>, <span class="k">port:</span> <span class="s">8080</span>}]
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">networking.k8s.io/v1</span>
+<span class="k">kind:</span> <span class="s">NetworkPolicy</span>          <span class="c"># don't forget the UI itself — the browser path enters
+                              # through the ingress controller too:</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">frontend-from-ingress</span>, <span class="k">namespace:</span> <span class="s">bookshelf</span>}
+<span class="k">spec:</span>
+  <span class="k">podSelector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">frontend</span>}}
+  <span class="k">policyTypes:</span> [<span class="s">Ingress</span>]
+  <span class="k">ingress:</span>
+  - <span class="k">from:</span>
+    - <span class="k">namespaceSelector:</span>
+        <span class="k">matchLabels:</span>
+          <span class="k">kubernetes.io/metadata.name:</span> <span class="s">ingress-nginx</span>
+    <span class="k">ports:</span> [{<span class="k">protocol:</span> <span class="s">TCP</span>, <span class="k">port:</span> <span class="s">80</span>}]</code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f lockdown.yaml</span>
+<span class="c"># Re-run the spy:</span>
+<span class="cmd">$ kubectl run spy -n intruder --image=busybox --restart=Never --rm -it -- \
+    sh -c "wget -T 3 -qO- api.bookshelf/api/books"</span>
+<span class="out">wget: download timed out</span>                    <span class="c"># denied. Calico is earning its keep.</span>
+<span class="c"># But the legitimate paths still work:</span>
+<span class="cmd">$ curl -s bookshelf.local/api/books | head -c 30</span>
+<span class="out">[{"author":"Kim","title":"The </span>
+<span class="c"># And http://bookshelf.local still loads in the browser (the frontend policy).
+# Frontend → api: allowed. Ingress → api and → frontend: allowed. intruder → api: dead.
+# api → db: allowed. spy → db: try it — dead. The contract is now enforced, not implied.</span></code></pre>
+
+<h3>Act 3 — RBAC: the read-only developer</h3>
+<pre><code><span class="cmd">$ kubectl create serviceaccount dev-viewer -n bookshelf</span>
+<span class="cmd">$ kubectl create role viewer -n bookshelf \
+    --verb=get,list,watch --resource=pods,services,deployments,configmaps</span>
+<span class="cmd">$ kubectl create rolebinding dev-viewer-binding -n bookshelf \
+    --role=viewer --serviceaccount=bookshelf:dev-viewer</span>
+
+<span class="c"># Now impersonate that identity — no second laptop needed:</span>
+<span class="cmd">$ kubectl auth can-i list pods -n bookshelf --as=system:serviceaccount:bookshelf:dev-viewer</span>
+<span class="out">yes</span>
+<span class="cmd">$ kubectl auth can-i delete pods -n bookshelf --as=system:serviceaccount:bookshelf:dev-viewer</span>
+<span class="out">no</span>
+<span class="cmd">$ kubectl auth can-i list pods -n default --as=system:serviceaccount:bookshelf:dev-viewer</span>
+<span class="out">no</span>                                          <span class="c"># Role ≠ ClusterRole: powers end at the namespace wall</span>
+<span class="cmd">$ kubectl delete deployment api -n bookshelf --as=system:serviceaccount:bookshelf:dev-viewer</span>
+<span class="out">Error from server (Forbidden): deployments.apps "api" is forbidden: User
+"system:serviceaccount:bookshelf:dev-viewer" cannot delete resource "deployments" ...</span>
+<span class="c"># Read the error like a sentence: WHO cannot do WHAT to WHICH resource WHERE.
+# You'll see this exact grammar in production incidents; now it's an old friend.</span></code></pre>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ kubectl delete namespace bookshelf intruder</span>
+<span class="cmd">$ kubectl config set-context --current --namespace=default</span>
+<span class="cmd">$ sudo sed -i '' '/bookshelf.local/d' /etc/hosts</span></code></pre>
+
+<h2 id="sc6">Scenario 6 — Break It On Purpose: Troubleshooting Drills</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Six pre-broken systems. For each: deploy the trap, read the symptom, find the cause with only <code>get</code>/<code>describe</code>/<code>logs</code>/<code>events</code>, fix it, verify. No peeking at the fault list until you've tried.</td></tr>
+  <tr><th>Time</th><td>~90 minutes (take two sittings)</td></tr>
+  <tr><th>Concepts</th><td>Everything — this is the exam-muscle scenario. Format mirrors CKA troubleshooting tasks.</td></tr>
+</table>
+
+<p>Work each drill the same way: <code>kubectl get pods</code> → what state? → <code>describe</code> → Events say? → <code>logs</code> if the container ran → form a theory → fix → verify. The faults are listed at the end of each drill upside-down style (in a callout) — resist reading ahead.</p>
+
+<h3>Drill 1 — “It says Pending forever”</h3>
+<pre><code><span class="cmd">$ kubectl create namespace drills &amp;&amp; kubectl config set-context --current --namespace=drills</span>
+<span class="cmd">$ kubectl apply -f - &lt;&lt;'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: drill1}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: drill1}}
+  template:
+    metadata: {labels: {app: drill1}}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+        resources:
+          requests: {cpu: "16", memory: 128Mi}
+EOF</span>
+<span class="cmd">$ kubectl get pods</span>
+<span class="out">NAME                      READY   STATUS    RESTARTS   AGE
+drill1-7b9f8d6c54-8jk2m   0/1     Pending   0          60s
+drill1-7b9f8d6c54-x4vn9   0/1     Pending   0          60s</span></code></pre>
+<div class="callout"><span class="label">Investigate, then read</span> <code>describe pod</code> → Events: <em>“0/3 nodes are available: 1 node(s) had untolerated taint {node-role.kubernetes.io/control-plane: }, 2 Insufficient cpu.”</em> Each pod requests <strong>16 whole CPUs</strong>; the entire Docker VM has 6 (remember §2.5: docker-driver nodes report the VM's full capacity, so the request must exceed the <em>VM</em> to be impossible). The scheduler isn't broken — the ask is. Fix: <code>kubectl set resources deployment drill1 --requests=cpu=100m</code> and watch both pods schedule.</div>
+
+<h3>Drill 2 — “ImagePullBackOff”</h3>
+<pre><code><span class="cmd">$ kubectl create deployment drill2 --image=ngnix:1.27</span>   <span class="c"># deploy exactly this</span>
+<span class="cmd">$ kubectl get pods</span>
+<span class="out">drill2-6d4b9c8f7-qq2zl   0/1     ImagePullBackOff   0     45s</span></code></pre>
+<div class="callout"><span class="label">Investigate, then read</span> Events: <em>“Failed to pull image "ngnix:1.27" … repository does not exist.”</em> Read the image name letter by letter: <strong>ngnix</strong>. The single most common outage cause there is — the image name is the field to be most careful with. Fix: <code>kubectl set image deployment/drill2 ngnix=nginx:1.27</code>.</div>
+
+<h3>Drill 3 — “CrashLoopBackOff”</h3>
+<pre><code><span class="cmd">$ kubectl apply -f - &lt;&lt;'EOF'
+apiVersion: v1
+kind: Pod
+metadata: {name: drill3}
+spec:
+  containers:
+  - name: app
+    image: postgres:17-alpine
+EOF</span>
+<span class="cmd">$ kubectl get pods drill3</span>
+<span class="out">drill3   0/1     CrashLoopBackOff   3 (25s ago)   2m</span></code></pre>
+<div class="callout"><span class="label">Investigate, then read</span> <code>describe</code> shows restarts but not why. <code>kubectl logs drill3</code>: <em>“Error: Database is uninitialized and superuser password is not specified. You must specify POSTGRES_PASSWORD…”</em> — the container itself told you the fix. describe → then logs, always. Fix: delete and recreate with <code>env: [{name: POSTGRES_PASSWORD, value: drill}]</code> (or better, a Secret — Scenario 3 style).</div>
+
+<h3>Drill 4 — “Service exists but nothing answers”</h3>
+<pre><code><span class="cmd">$ kubectl create deployment drill4 --image=nginx:1.27 --port=80</span>
+<span class="cmd">$ kubectl apply -f - &lt;&lt;'EOF'
+apiVersion: v1
+kind: Service
+metadata: {name: drill4}
+spec:
+  selector: {app: drill-4}
+  ports: [{port: 80}]
+EOF</span>
+<span class="cmd">$ kubectl run t --image=busybox --restart=Never --rm -it -- wget -T3 -qO- drill4</span>
+<span class="out">wget: download timed out</span></code></pre>
+<div class="callout"><span class="label">Investigate, then read</span> The service is fine; the pod is fine; check what binds them: <code>kubectl get endpointslices</code> → the drill4 slice has <strong>no endpoints</strong>. <code>kubectl describe svc drill4</code> → Selector: <code>app=drill-4</code>. The deployment's pods carry <code>app=drill4</code> — hyphen mismatch, so the service selects <em>nothing</em>. Labels are identity. Fix: <code>kubectl patch svc drill4 -p '{"spec":{"selector":{"app":"drill4"}}}'</code> and re-test. Empty EndpointSlice = selector mismatch, burn that reflex in.</div>
+
+<h3>Drill 5 — “The mount that ate the app”</h3>
+<pre><code><span class="cmd">$ kubectl create configmap drill5-conf --from-literal=note.txt=hello</span>
+<span class="cmd">$ kubectl apply -f - &lt;&lt;'EOF'
+apiVersion: v1
+kind: Pod
+metadata: {name: drill5}
+spec:
+  containers:
+  - name: web
+    image: nginx:1.27
+    volumeMounts: [{name: conf, mountPath: /etc/nginx}]
+  volumes: [{name: conf, configMap: {name: drill5-conf}}]
+EOF</span>
+<span class="cmd">$ kubectl get pod drill5</span>
+<span class="out">drill5   0/1     CrashLoopBackOff   2 (18s ago)   80s</span></code></pre>
+<div class="callout"><span class="label">Investigate, then read</span> <code>kubectl logs drill5</code>: <em>“open() "/etc/nginx/nginx.conf" failed (2: No such file or directory)”</em>. A Kubernetes classic: mounting over an existing directory <strong>obliterates it</strong> — nginx's own config is gone. Fix with a subPath so the file coexists: <code>mountPath: /etc/nginx/note.txt</code> + <code>subPath: note.txt</code>.</div>
+
+<h3>Drill 6 — “The quota says no”</h3>
+<pre><code><span class="c"># Clear the bench first — leftovers from drills 2–5 would count against the quota:</span>
+<span class="cmd">$ kubectl delete deployment drill2 drill4 &amp;&amp; kubectl delete pod drill3 drill5 &amp;&amp; kubectl delete svc drill4</span>
+
+<span class="cmd">$ kubectl create quota drill-quota --hard=pods=3,cpu=500m -n drills</span>
+<span class="cmd">$ kubectl scale deployment drill1 --replicas=5</span>
+<span class="cmd">$ kubectl get pods -l app=drill1</span>
+<span class="out">NAME                      READY   STATUS    AGE
+drill1-5f6d7c8b9-2mkzq    1/1     Running   5m
+drill1-5f6d7c8b9-8xw7l    1/1     Running   5m
+drill1-5f6d7c8b9-pv4td    1/1     Running   5m</span>       <span class="c"># …only 3 of 5. Where are the others?</span></code></pre>
+<div class="callout"><span class="label">Investigate, then read</span> Pods aren't Pending — they don't exist. Quota denials happen at <em>admission</em>, so look above the pod: <code>kubectl describe rs -l app=drill1</code> → Events: <em>“Error creating: pods "drill1-…" is forbidden: exceeded quota: drill-quota, requested: pods=1, used: pods=3, limited: pods=3.”</em> The bouncer at the club, caught red-handed. Also note the deployment shows <code>READY 3/5</code> — the desired-vs-actual gap is your alarm. Fix: raise the quota or lower the replicas.</div>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ kubectl delete namespace drills &amp;&amp; kubectl config set-context --current --namespace=default</span></code></pre>
+<!-- ======================= PART D ======================= -->
+<div class="part-banner ai" id="part-d">
+  <div class="kicker">Part D</div>
+  <h1>Advanced Scenarios — M5 Max Territory</h1>
+  <p>These assume the §5 scale-up (Docker VM at 12 CPUs / 48 GB). A nine-node HA fleet under chaos, a production-shaped GitOps + observability stack, and a miniature AI platform built with real cloud-native AI tooling.</p>
+</div>
+
+<h2 id="sc7">Scenario 7 — The Nine-Node Fleet: HA, Placement &amp; Chaos</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Operate a 9-node, 3-control-plane cluster: steer pods with taints/affinity/spread, protect them with PodDisruptionBudgets, then run a chaos gauntlet — including killing a control-plane node — and watch the cluster shrug.</td></tr>
+  <tr><th>Time</th><td>~2 hours</td></tr>
+  <tr><th>Concepts</th><td>Control plane &amp; etcd quorum · taints · topology spread · PDBs · failure playbook</td></tr>
+  <tr><th>Requires</th><td>Docker VM at 12 CPU / 48 GB (§5). Stop the <code>practice</code> profile first.</td></tr>
+</table>
+
+<h3>Act 1 — Build the fleet</h3>
+<pre><code><span class="cmd">$ minikube stop --profile=practice</span>
+<span class="cmd">$ minikube start --profile=fleet --driver=docker --ha --nodes=9 \
+    --cni=calico --cpus=2 --memory=4096 --kubernetes-version=v1.34.1</span>
+<span class="cmd">$ kubectl get nodes</span>
+<span class="out">NAME        STATUS   ROLES           AGE   VERSION
+fleet       Ready    control-plane   9m    v1.34.1
+fleet-m02   Ready    control-plane   8m    v1.34.1
+fleet-m03   Ready    control-plane   7m    v1.34.1
+fleet-m04   Ready    &lt;none&gt;          6m    v1.34.1
+fleet-m05   Ready    &lt;none&gt;          5m    v1.34.1
+fleet-m06   Ready    &lt;none&gt;          5m    v1.34.1
+fleet-m07   Ready    &lt;none&gt;          4m    v1.34.1
+fleet-m08   Ready    &lt;none&gt;          3m    v1.34.1
+fleet-m09   Ready    &lt;none&gt;          3m    v1.34.1</span>   <span class="c"># three control planes — real HA topology</span></code></pre>
+
+<h3>Act 2 — Carve the fleet into zones (labels + taints)</h3>
+<pre><code><span class="c"># Pretend m04–m06 are rack A, m07–m09 are rack B; m09 is "special hardware":</span>
+<span class="cmd">$ kubectl label node fleet-m04 fleet-m05 fleet-m06 topology.kubernetes.io/zone=rack-a</span>
+<span class="cmd">$ kubectl label node fleet-m07 fleet-m08 fleet-m09 topology.kubernetes.io/zone=rack-b</span>
+<span class="cmd">$ kubectl taint node fleet-m09 hardware=special:NoSchedule</span>   <span class="c"># the classic "GPU-node" taint pattern</span>
+
+<span class="cmd">$ kubectl create namespace fleet-lab &amp;&amp; kubectl config set-context --current --namespace=fleet-lab</span>
+
+<span class="c"># spread.yaml — 12 replicas that MUST spread evenly across zones:</span>
+<span class="k">apiVersion:</span> <span class="s">apps/v1</span>
+<span class="k">kind:</span> <span class="s">Deployment</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">spread-app</span>}
+<span class="k">spec:</span>
+  <span class="k">replicas:</span> <span class="s">12</span>
+  <span class="k">selector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">spread-app</span>}}
+  <span class="k">template:</span>
+    <span class="k">metadata:</span> {<span class="k">labels:</span> {<span class="k">app:</span> <span class="s">spread-app</span>}}
+    <span class="k">spec:</span>
+      <span class="k">topologySpreadConstraints:</span>
+      - <span class="k">maxSkew:</span> <span class="s">1</span>
+        <span class="k">topologyKey:</span> <span class="s">topology.kubernetes.io/zone</span>
+        <span class="k">whenUnsatisfiable:</span> <span class="s">DoNotSchedule</span>
+        <span class="k">labelSelector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">spread-app</span>}}
+      <span class="k">containers:</span>
+      - <span class="k">name:</span> <span class="s">app</span>
+        <span class="k">image:</span> <span class="s">nginx:1.27</span>
+        <span class="k">resources:</span> {<span class="k">requests:</span> {<span class="k">cpu:</span> <span class="s">100m</span>, <span class="k">memory:</span> <span class="s">64Mi</span>}}</code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f spread.yaml</span>
+<span class="cmd">$ kubectl get pods -o wide --no-headers | awk '{print $7}' | sort | uniq -c</span>
+<span class="out">   2 fleet-m04
+   2 fleet-m05
+   2 fleet-m06
+   3 fleet-m07
+   3 fleet-m08</span>          <span class="c"># 6 in rack-a, 6 in rack-b (skew ≤1), and NOTHING on m09 —
+                          # the taint repels pods that don't tolerate it. Verify the zone
+                          # math; note m09 idle exactly as designed.</span></code></pre>
+
+<h3>Act 3 — Claim the special node, protect the app</h3>
+<pre><code><span class="c"># A workload that TOLERATES the taint and INSISTS on rack-b + the special node:</span>
+<span class="cmd">$ kubectl apply -f - &lt;&lt;'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: special-app}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: special-app}}
+  template:
+    metadata: {labels: {app: special-app}}
+    spec:
+      tolerations:
+      - {key: hardware, operator: Equal, value: special, effect: NoSchedule}
+      nodeSelector: {kubernetes.io/hostname: fleet-m09}
+      containers:
+      - name: app
+        image: nginx:1.27
+EOF</span>
+<span class="cmd">$ kubectl get pods -l app=special-app -o wide</span>
+<span class="out">special-app-...-2kq8x   1/1   Running   0   15s   10.244.201.7   fleet-m09
+special-app-...-9mzw4   1/1   Running   0   15s   10.244.201.8   fleet-m09</span>
+
+<span class="c"># PodDisruptionBudget — the seatbelt for maintenance:</span>
+<span class="cmd">$ kubectl create poddisruptionbudget spread-pdb --selector=app=spread-app --min-available=9</span></code></pre>
+
+<h3>Act 4 — Maintenance day (voluntary disruption)</h3>
+<pre><code><span class="cmd">$ kubectl drain fleet-m05 --ignore-daemonsets --delete-emptydir-data</span>
+<span class="out">node/fleet-m05 cordoned
+evicting pod fleet-lab/spread-app-7f6d8c9b54-4kzmq
+evicting pod fleet-lab/spread-app-7f6d8c9b54-8xw2l
+pod/spread-app-7f6d8c9b54-4kzmq evicted
+pod/spread-app-7f6d8c9b54-8xw2l evicted
+node/fleet-m05 drained</span>
+<span class="c"># The PDB paced the evictions so ≥9 stayed available; the spread constraint
+# re-placed the evicted pods within rack-a (m04/m06). Check both claims:</span>
+<span class="cmd">$ kubectl get pods -o wide --no-headers | awk '{print $7}' | sort | uniq -c</span>
+<span class="c"># "Patch" the node and return it to service:</span>
+<span class="cmd">$ kubectl uncordon fleet-m05</span></code></pre>
+
+<h3>Act 5 — Chaos gauntlet (involuntary disruption)</h3>
+<pre><code><span class="c"># ① Kill a worker cold (no drain, no warning):</span>
+<span class="cmd">$ docker kill fleet-m07</span>
+<span class="cmd">$ kubectl get nodes -w</span>
+<span class="out">fleet-m07   NotReady   &lt;none&gt;   40m   v1.34.1</span>       <span class="c"># ~40s later</span>
+<span class="c"># ~5 min later: its pods are evicted and rebuilt on m04–m08, spread constraints
+# still honored. Bring it back: docker start fleet-m07 → Ready again.</span>
+
+<span class="c"># ② The big one — kill a CONTROL-PLANE node:</span>
+<span class="cmd">$ docker kill fleet-m02</span>
+<span class="cmd">$ kubectl get nodes</span>                                  <span class="c"># still answers! HA means the API
+                                                       # survives a control-plane death</span>
+<span class="out">NAME        STATUS     ROLES           AGE   VERSION
+fleet       Ready      control-plane   55m   v1.34.1
+fleet-m02   NotReady   control-plane   54m   v1.34.1
+fleet-m03   Ready      control-plane   53m   v1.34.1
+...</span>
+<span class="cmd">$ kubectl create deployment prove-it --image=nginx:1.27</span>   <span class="c"># scheduling still works too</span>
+<span class="out">deployment.apps/prove-it created</span>
+<span class="cmd">$ docker start fleet-m02</span>                             <span class="c"># heal; watch etcd re-sync it in</span>
+
+<span class="c"># ③ Watch etcd quorum in action (the "why 3 control planes" lesson):
+#    with m02 down you had 2/3 etcd members = quorum held. Kill TWO control
+#    planes and the API server stops answering — try it, feel the fear, restart them.</span></code></pre>
+
+<div class="callout tip">
+  <span class="label">What this scenario proved</span>
+  The classic failure playbook — detect, cordon/drain, diagnose, return — plus the etcd-quorum reality: losing etcd quorum means losing the cluster's brain. You have now personally survived a control-plane failure. Most engineers never get to practice that safely.
+</div>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ minikube delete --profile=fleet</span>
+<span class="cmd">$ minikube start --profile=practice</span>       <span class="c"># back to the daily lab</span></code></pre>
+
+<h2 id="sc8">Scenario 8 — GitOps &amp; Observability: Argo CD + Prometheus/Grafana</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Stop kubectl-ing changes into clusters by hand: install Argo CD, let git drive deployments (including a self-healing demo when you tamper live), and stand up the kube-prometheus-stack to watch it all on Grafana dashboards.</td></tr>
+  <tr><th>Time</th><td>~2 hours</td></tr>
+  <tr><th>Concepts</th><td>Helm · operators/CRDs · GitOps · observability-before-users</td></tr>
+  <tr><th>Requires</th><td>The 3-node <code>practice</code> cluster is fine; bump Docker VM to ≥16 GB for comfort (prometheus stack is hungry).</td></tr>
+</table>
+
+<h3>Act 1 — Argo CD</h3>
+<pre><code><span class="cmd">$ kubectl create namespace argocd</span>
+<span class="cmd">$ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml</span>
+<span class="cmd">$ kubectl get pods -n argocd</span>
+<span class="out">NAME                                  READY   STATUS    RESTARTS   AGE
+argocd-application-controller-0       1/1     Running   0          2m
+argocd-repo-server-5f7b8c9d6-k2xwq    1/1     Running   0          2m
+argocd-server-7d8c9b6f54-9mzw4       1/1     Running   0          2m
+... (7 pods total)</span>
+
+<span class="c"># Log in to the UI:</span>
+<span class="cmd">$ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo</span>
+<span class="out">x8Kp2mQr9vLwZn4T</span>                          <span class="c"># yours will differ — this is the admin password</span>
+<span class="cmd">$ kubectl port-forward svc/argocd-server -n argocd 8443:443</span>
+<span class="c"># Browser → https://localhost:8443 → accept the self-signed cert → admin / &lt;password&gt;</span></code></pre>
+
+<h3>Act 2 — An app that git controls, not you</h3>
+<pre><code><span class="c"># app.yaml — point Argo CD at the public example repo (guestbook):</span>
+<span class="k">apiVersion:</span> <span class="s">argoproj.io/v1alpha1</span>
+<span class="k">kind:</span> <span class="s">Application</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">guestbook</span>, <span class="k">namespace:</span> <span class="s">argocd</span>}
+<span class="k">spec:</span>
+  <span class="k">project:</span> <span class="s">default</span>
+  <span class="k">source:</span>
+    <span class="k">repoURL:</span> <span class="s">https://github.com/argoproj/argocd-example-apps</span>
+    <span class="k">targetRevision:</span> <span class="s">HEAD</span>
+    <span class="k">path:</span> <span class="s">guestbook</span>
+  <span class="k">destination:</span>
+    <span class="k">server:</span> <span class="s">https://kubernetes.default.svc</span>
+    <span class="k">namespace:</span> <span class="s">guestbook</span>
+  <span class="k">syncPolicy:</span>
+    <span class="k">automated:</span> {<span class="k">prune:</span> <span class="s">true</span>, <span class="k">selfHeal:</span> <span class="s">true</span>}   <span class="c"># the magic words</span>
+    <span class="k">syncOptions:</span> [<span class="s">CreateNamespace=true</span>]</code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f app.yaml</span>
+<span class="cmd">$ kubectl get applications -n argocd</span>
+<span class="out">NAME        SYNC STATUS   HEALTH STATUS
+guestbook   Synced        Healthy</span>
+<span class="cmd">$ kubectl get pods -n guestbook</span>
+<span class="out">guestbook-ui-56c646849b-vw62t   1/1     Running   0          90s</span>
+
+<span class="c"># THE GITOPS MOMENT — tamper with the cluster by hand, like a rogue admin:</span>
+<span class="cmd">$ kubectl scale deployment guestbook-ui -n guestbook --replicas=5</span>
+<span class="cmd">$ kubectl get deployment -n guestbook -w</span>
+<span class="out">guestbook-ui   5/5   5   5   4m
+guestbook-ui   1/1   1   1   4m</span>            <span class="c"># seconds later: Argo CD noticed the drift
+                                             # and PUT IT BACK to match git. The cluster
+                                             # now answers to the repo, not to you.</span></code></pre>
+<div class="callout">
+  <span class="label">Extend it</span>
+  Fork <code>argocd-example-apps</code> on GitHub, point <code>repoURL</code> at your fork, edit <code>guestbook/guestbook-ui-deployment.yaml</code> replicas in a commit — and watch the cluster follow your commit with no kubectl at all. Congratulations: deployment-by-pull-request, the way production platforms actually ship.
+</div>
+
+<h3>Act 3 — kube-prometheus-stack</h3>
+<pre><code><span class="cmd">$ helm repo add prometheus-community https://prometheus-community.github.io/helm-charts &amp;&amp; helm repo update</span>
+<span class="cmd">$ helm install monitoring prometheus-community/kube-prometheus-stack \
+    -n monitoring --create-namespace --set grafana.adminPassword=practice</span>
+<span class="cmd">$ kubectl get pods -n monitoring</span>
+<span class="out">NAME                                                     READY   STATUS
+alertmanager-monitoring-kube-prometheus-alertmanager-0   2/2     Running
+monitoring-grafana-6b7d9c8f54-2kq8x                      3/3     Running
+monitoring-kube-prometheus-operator-...                  1/1     Running
+monitoring-kube-state-metrics-...                        1/1     Running
+monitoring-prometheus-node-exporter-...  (one per node)  1/1     Running
+prometheus-monitoring-kube-prometheus-prometheus-0       2/2     Running</span>
+
+<span class="cmd">$ kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80</span>
+<span class="c"># Browser → http://localhost:3000 → admin / practice
+# Preloaded dashboards worth an hour of exploration:
+#   "Kubernetes / Compute Resources / Cluster"  — who is eating your VM
+#   "Kubernetes / Compute Resources / Namespace (Pods)" — pick guestbook, watch it live
+#   "Node Exporter / Nodes" — per-node pressure, straight from your Docker containers</span></code></pre>
+
+<h3>Act 4 — Close the loop: an alert you trigger on purpose</h3>
+<pre><code><span class="c"># Deploy a leaky app (limits it will inevitably hit):</span>
+<span class="cmd">$ kubectl create namespace leaky &amp;&amp; kubectl apply -n leaky -f - &lt;&lt;'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: leaker}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: leaker}}
+  template:
+    metadata: {labels: {app: leaker}}
+    spec:
+      containers:
+      - name: leaker
+        image: python:3.12-alpine
+        command: [python, -c, "l=[]\nwhile True: l.append(' ' * 10_000_000)"]
+        resources:
+          limits: {memory: 128Mi}
+EOF</span>
+<span class="cmd">$ kubectl get pods -n leaky -w</span>
+<span class="out">leaker-...   0/1   OOMKilled   1 (10s ago)   30s
+leaker-...   0/1   CrashLoopBackOff   2 (8s ago)    55s</span>
+<span class="c"># In Grafana: the namespace dashboard shows the sawtooth memory climb-and-kill.
+# In Prometheus (port-forward svc/monitoring-kube-prometheus-prometheus 9090:9090),
+# query:  increase(kube_pod_container_status_restarts_total{namespace="leaky"}[10m])
+# — and find the KubePodCrashLooping alert firing under Alerts. Metrics → dashboards
+# → alerts: the full production observability loop, on your laptop.</span></code></pre>
+
+<h3>Cleanup</h3>
+<pre><code><span class="c"># Order matters: delete the Application FIRST — with selfHeal on, Argo CD would
+# treat a deleted guestbook namespace as drift and resurrect it mid-cleanup:</span>
+<span class="cmd">$ kubectl delete application guestbook -n argocd</span>
+<span class="cmd">$ kubectl delete namespace guestbook leaky</span>
+<span class="cmd">$ kubectl delete namespace argocd</span>
+<span class="cmd">$ helm uninstall monitoring -n monitoring &amp;&amp; kubectl delete namespace monitoring</span></code></pre>
+
+<h2 id="sc9">Scenario 9 — The Mini AI Platform: Kueue, Batch Jobs &amp; LLM Serving</h2>
+<table class="kv">
+  <tr><th>Goal</th><td>Build a working AI platform in miniature: team quotas and job queueing with Kueue, gang-style batch “training” jobs competing for capacity, a real LLM served from the cluster on CPU — and the honest hybrid that puts your 40-core GPU to work.</td></tr>
+  <tr><th>Time</th><td>~2–3 hours (model pulls included)</td></tr>
+  <tr><th>Concepts</th><td>Job queueing (Kueue) · batch Jobs · LLM serving · efficiency metrics</td></tr>
+  <tr><th>Requires</th><td>Docker VM ≥ 12 CPU / 48 GB. The 3-node <code>practice</code> cluster works; give it more per-node memory if rebuilding: <code>--memory=8192</code>.</td></tr>
+</table>
+
+<h3>Act 1 — Install Kueue and model two teams</h3>
+<pre><code><span class="cmd">$ VERSION=$(curl -s https://api.github.com/repos/kubernetes-sigs/kueue/releases/latest | grep tag_name | cut -d'"' -f4)</span>
+<span class="cmd">$ kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/$VERSION/manifests.yaml</span>
+<span class="cmd">$ kubectl get pods -n kueue-system</span>
+<span class="out">kueue-controller-manager-7d9c8b6f54-x2kqm   1/1     Running   0          60s</span>
+
+<span class="c"># kueue-setup.yaml — one flavor, two team queues sharing 8 CPUs of "cluster" capacity:</span>
+<span class="k">apiVersion:</span> <span class="s">kueue.x-k8s.io/v1beta1</span>
+<span class="k">kind:</span> <span class="s">ResourceFlavor</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">default-flavor</span>}
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">kueue.x-k8s.io/v1beta1</span>
+<span class="k">kind:</span> <span class="s">ClusterQueue</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">team-research</span>}
+<span class="k">spec:</span>
+  <span class="k">namespaceSelector:</span> <span class="s">{}</span>
+  <span class="k">resourceGroups:</span>
+  - <span class="k">coveredResources:</span> [<span class="s">cpu</span>, <span class="s">memory</span>]
+    <span class="k">flavors:</span>
+    - <span class="k">name:</span> <span class="s">default-flavor</span>
+      <span class="k">resources:</span>
+      - {<span class="k">name:</span> <span class="s">cpu</span>, <span class="k">nominalQuota:</span> <span class="s">6</span>}      <span class="c"># research gets 6 CPUs…</span>
+      - {<span class="k">name:</span> <span class="s">memory</span>, <span class="k">nominalQuota:</span> <span class="s">12Gi</span>}
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">kueue.x-k8s.io/v1beta1</span>
+<span class="k">kind:</span> <span class="s">ClusterQueue</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">team-app</span>}
+<span class="k">spec:</span>
+  <span class="k">namespaceSelector:</span> <span class="s">{}</span>
+  <span class="k">resourceGroups:</span>
+  - <span class="k">coveredResources:</span> [<span class="s">cpu</span>, <span class="s">memory</span>]
+    <span class="k">flavors:</span>
+    - <span class="k">name:</span> <span class="s">default-flavor</span>
+      <span class="k">resources:</span>
+      - {<span class="k">name:</span> <span class="s">cpu</span>, <span class="k">nominalQuota:</span> <span class="s">2</span>}      <span class="c"># …app team gets 2</span>
+      - {<span class="k">name:</span> <span class="s">memory</span>, <span class="k">nominalQuota:</span> <span class="s">4Gi</span>}
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">kueue.x-k8s.io/v1beta1</span>
+<span class="k">kind:</span> <span class="s">LocalQueue</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">research-queue</span>, <span class="k">namespace:</span> <span class="s">ai-lab</span>}
+<span class="k">spec:</span> {<span class="k">clusterQueue:</span> <span class="s">team-research</span>}
+<span class="s">---</span>
+<span class="k">apiVersion:</span> <span class="s">kueue.x-k8s.io/v1beta1</span>
+<span class="k">kind:</span> <span class="s">LocalQueue</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">app-queue</span>, <span class="k">namespace:</span> <span class="s">ai-lab</span>}
+<span class="k">spec:</span> {<span class="k">clusterQueue:</span> <span class="s">team-app</span>}</code></pre>
+<pre><code><span class="cmd">$ kubectl create namespace ai-lab &amp;&amp; kubectl apply -f kueue-setup.yaml</span>
+<span class="cmd">$ kubectl config set-context --current --namespace=ai-lab</span></code></pre>
+
+<h3>Act 2 — Queueing in action: more jobs than cluster</h3>
+<pre><code><span class="c"># train-job.yaml — a fake "training run": 2 parallel workers × 3 CPUs of matrix math.
+# The kueue label is how a Job joins a queue (labels doing the heavy lifting, again):</span>
+<span class="k">apiVersion:</span> <span class="s">batch/v1</span>
+<span class="k">kind:</span> <span class="s">Job</span>
+<span class="k">metadata:</span>
+  <span class="k">generateName:</span> <span class="s">train-</span>
+  <span class="k">labels:</span> {<span class="k">kueue.x-k8s.io/queue-name:</span> <span class="s">research-queue</span>}
+<span class="k">spec:</span>
+  <span class="k">parallelism:</span> <span class="s">2</span>
+  <span class="k">completions:</span> <span class="s">2</span>
+  <span class="k">suspend:</span> <span class="s">true</span>                     <span class="c"># Kueue admits (unsuspends) it when quota allows</span>
+  <span class="k">template:</span>
+    <span class="k">spec:</span>
+      <span class="k">restartPolicy:</span> <span class="s">Never</span>
+      <span class="k">containers:</span>
+      - <span class="k">name:</span> <span class="s">trainer</span>
+        <span class="k">image:</span> <span class="s">python:3.12-slim</span>
+        <span class="k">command:</span> [<span class="s">sh</span>, <span class="s">-c</span>]
+        <span class="k">args:</span>
+        - |
+          pip install --quiet numpy &amp;&amp; python - &lt;&lt;'PY'
+          import numpy as np, time
+          t0 = time.time(); steps = 0
+          while time.time() - t0 &lt; 180:                    # 3 minutes of "training"
+              a = np.random.rand(1200,1200) @ np.random.rand(1200,1200)
+              steps += 1
+          print(f"training complete: {steps} steps")
+          PY
+        <span class="k">resources:</span>
+          <span class="k">requests:</span> {<span class="k">cpu:</span> <span class="s">"3"</span>, <span class="k">memory:</span> <span class="s">1Gi</span>}
+          <span class="k">limits:</span>   {<span class="k">cpu:</span> <span class="s">"3"</span>, <span class="k">memory:</span> <span class="s">2Gi</span>}</code></pre>
+<pre><code><span class="c"># Submit THREE runs = 3 × (2 pods × 3 CPU) = 18 CPUs of demand into a 6-CPU quota:</span>
+<span class="cmd">$ kubectl create -f train-job.yaml &amp;&amp; kubectl create -f train-job.yaml &amp;&amp; kubectl create -f train-job.yaml</span>
+<span class="cmd">$ kubectl get workloads</span>
+<span class="out">NAME                       QUEUE            RESERVED IN     ADMITTED   AGE
+job-train-8kzq2-7f4d2      research-queue   team-research   True       30s
+job-train-p71xd-9c8b1      research-queue                   False      25s
+job-train-ww4mn-2e6a5      research-queue                   False      20s</span>
+<span class="c"># ONE run admitted (6/6 CPUs used); two WAIT IN QUEUE — not Pending-forever pods,
+# but suspended Jobs. As each run finishes, Kueue admits the next. Watch the handoff:</span>
+<span class="cmd">$ kubectl get workloads -w</span>
+<span class="c"># This is the whole argument for job queueing in one screen: quota + queueing beats
+# scheduler-deadlock. Submit a job to app-queue and see it run IMMEDIATELY —
+# separate team, separate quota, no queue-jumping between teams.</span></code></pre>
+
+<h3>Act 3 — Serve a real LLM from the cluster (CPU)</h3>
+<pre><code><span class="c"># model-cache-pvc.yaml — the weights cache that outlives every pod:</span>
+<span class="k">apiVersion:</span> <span class="s">v1</span>
+<span class="k">kind:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">model-cache</span>}
+<span class="k">spec:</span>
+  <span class="k">storageClassName:</span> <span class="s">csi-hostpath-sc</span>
+  <span class="k">accessModes:</span> [<span class="s">ReadWriteOnce</span>]
+  <span class="k">resources:</span> {<span class="k">requests:</span> {<span class="k">storage:</span> <span class="s">10Gi</span>}}</code></pre>
+<pre><code><span class="c"># llm.yaml — Ollama + a 1B-parameter model, entirely inside the cluster:</span>
+<span class="k">apiVersion:</span> <span class="s">apps/v1</span>
+<span class="k">kind:</span> <span class="s">Deployment</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">llm</span>}
+<span class="k">spec:</span>
+  <span class="k">replicas:</span> <span class="s">1</span>
+  <span class="k">selector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">llm</span>}}
+  <span class="k">template:</span>
+    <span class="k">metadata:</span> {<span class="k">labels:</span> {<span class="k">app:</span> <span class="s">llm</span>}}
+    <span class="k">spec:</span>
+      <span class="k">containers:</span>
+      - <span class="k">name:</span> <span class="s">ollama</span>
+        <span class="k">image:</span> <span class="s">ollama/ollama:latest</span>       <span class="c"># multi-arch: runs arm64-native</span>
+        <span class="k">ports:</span> [{<span class="k">containerPort:</span> <span class="s">11434</span>}]
+        <span class="k">resources:</span>
+          <span class="k">requests:</span> {<span class="k">cpu:</span> <span class="s">"2"</span>, <span class="k">memory:</span> <span class="s">4Gi</span>}
+          <span class="k">limits:</span>   {<span class="k">cpu:</span> <span class="s">"4"</span>, <span class="k">memory:</span> <span class="s">8Gi</span>}
+        <span class="k">volumeMounts:</span> [{<span class="k">name:</span> <span class="s">models</span>, <span class="k">mountPath:</span> <span class="s">/root/.ollama</span>}]
+        <span class="k">readinessProbe:</span>
+          <span class="k">httpGet:</span> {<span class="k">path:</span> <span class="s">/</span>, <span class="k">port:</span> <span class="s">11434</span>}
+          <span class="k">initialDelaySeconds:</span> <span class="s">10</span>
+      <span class="k">volumes:</span>
+      - <span class="k">name:</span> <span class="s">models</span>
+        <span class="k">persistentVolumeClaim:</span> {<span class="k">claimName:</span> <span class="s">model-cache</span>}   <span class="c"># shared model-cache pattern:
+                                                             # weights survive pod restarts</span></code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f model-cache-pvc.yaml -f llm.yaml</span>
+<span class="cmd">$ kubectl expose deployment llm --port=11434</span>
+<span class="cmd">$ kubectl exec -it deploy/llm -- ollama pull llama3.2:1b</span>  <span class="c"># ~1.3GB, one-time (cached in the PVC)</span>
+
+<span class="cmd">$ kubectl run prompt --image=curlimages/curl --restart=Never --rm -it -- \
+    curl -s http://llm:11434/api/generate -d '{
+      "model":"llama3.2:1b",
+      "prompt":"Explain a Kubernetes pod in one sentence.",
+      "stream":false}'</span>
+<span class="out">{"model":"llama3.2:1b","response":"A Kubernetes pod is the smallest deployable unit
+that wraps one or more containers sharing network and storage...","done":true,
+"eval_count":31,"eval_duration":2412000000,...}</span>
+<span class="c"># Real tokens from a real model, served by YOUR cluster. eval_duration ≈ 2.4s
+# for ~31 tokens on CPU — remember that number for Act 4.</span></code></pre>
+
+<h3>Act 4 — The honest hybrid: put the 40-core GPU in the loop</h3>
+<p>Containers can't see Apple's GPU (§5) — but real platforms constantly front models they don't host. So run Ollama <em>natively on macOS</em> (Metal-accelerated) and let the cluster treat it as an external backend — the same shape real platforms use: an inference gateway in the cluster, a GPU pool behind it:</p>
+<pre><code><span class="c"># On the Mac (Terminal, not the cluster):</span>
+<span class="cmd">$ brew install ollama</span>
+<span class="cmd">$ OLLAMA_HOST=0.0.0.0 ollama serve &amp;</span>
+<span class="cmd">$ ollama pull llama3.2:3b</span>                  <span class="c"># bigger model — your GPU can afford it</span>
+
+<span class="c"># In the cluster: a selector-less Service backed by a MANUAL EndpointSlice
+# pointing at your Mac. (Why not ExternalName → host.minikube.internal? That name
+# lives only in the NODES' /etc/hosts — CoreDNS can't resolve it for pods. So we
+# grab the host's IP from a node and wire it in explicitly — which is also exactly
+# how you'd front any external backend in production.)</span>
+<span class="cmd">$ HOSTIP=$(minikube ssh -p practice "grep host.minikube.internal /etc/hosts | cut -f1" | tr -d '\r')</span>
+<span class="cmd">$ echo $HOSTIP</span>
+<span class="out">192.168.65.254</span>                             <span class="c"># typical on Docker Desktop; yours may differ</span>
+<span class="cmd">$ kubectl apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: Service
+metadata: {name: gpu-llm}
+spec:
+  ports: [{port: 11434, targetPort: 11434}]
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: gpu-llm-1
+  labels: {kubernetes.io/service-name: gpu-llm}
+addressType: IPv4
+ports: [{port: 11434, protocol: TCP}]
+endpoints:
+- addresses: ["$HOSTIP"]
+EOF</span>
+<span class="cmd">$ kubectl run prompt --image=curlimages/curl --restart=Never --rm -it -- \
+    curl -s http://gpu-llm:11434/api/generate -d '{
+      "model":"llama3.2:3b","prompt":"Explain a Kubernetes pod in one sentence.","stream":false}'</span>
+<span class="out">{"model":"llama3.2:3b","response":"...","done":true,
+"eval_count":34,"eval_duration":510000000,...}</span>
+<span class="c"># ~0.5s on the Metal-accelerated 3B vs ~2.4s on the CPU-bound 1B: the GPU is now
+# in your serving path, brokered through a cluster Service. Compare architectures:
+# in-cluster CPU model = self-hosted inference; Service + manual EndpointSlice to
+# the host = external GPU pool. Both halves of a real inference platform, on one laptop. (Bonus:
+# you just hand-authored an EndpointSlice — the object services normally manage
+# for you, and the first thing to inspect in Drill 4-style "nothing answers" bugs.)</span></code></pre>
+
+<div class="callout exam">
+  <span class="label">Stretch goals</span>
+  ① Autoscale the CPU LLM: HPA on the llm deployment, load it with parallel prompts, watch replicas grow — then hit the wall: the model-cache PVC is ReadWriteOnce on a node-local CSI driver, so replicas landing on <em>other</em> nodes stick in ContainerCreating. Diagnose it, then pin replicas to one node (nodeSelector) or give each its own cache. That wall is precisely why real platforms use RWX model caches (the industry's shared-model-cache pattern). ② Add a NetworkPolicy so only pods labeled <code>role=prompt-gw</code> may reach the llm service (Scenario 5 skills). ③ Put the whole ai-lab namespace under an Argo CD Application (Scenario 8) and manage your AI platform from git.
+</div>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ kubectl delete namespace ai-lab</span>
+<span class="cmd">$ kubectl delete clusterqueue team-research team-app &amp;&amp; kubectl delete resourceflavor default-flavor</span>
+<span class="cmd">$ pkill ollama</span>                             <span class="c"># stop the native server on the Mac</span>
+<span class="cmd">$ kubectl config set-context --current --namespace=default</span></code></pre>
+
+<!-- ======================= APPENDIX ======================= -->
+<h2 id="map">Appendix — Scenario ↔ Concept Map &amp; Quick Reference</h2>
+<table>
+  <tr><th>Scenario</th><th>Level</th><th>Core concepts exercised</th><th>Signature skill you walk away with</th></tr>
+  <tr><td>1 — Hello, Cluster</td><td>Basic</td><td>Pod lifecycle, kubectl, labels, Deployments, Services</td><td>Reading the self-healing loop live; node-failure recovery</td></tr>
+  <tr><td>2 — Config Kitchen</td><td>Basic</td><td>Resources, probes, ConfigMaps, Secrets, logs</td><td>Config-vs-restart semantics; probes that auto-heal deadlocks</td></tr>
+  <tr><td>3 — Storage That Survives</td><td>Basic</td><td>Dynamic storage provisioning, CSI snapshots</td><td>Dynamic provisioning; snapshot → restore</td></tr>
+  <tr><td>4 — Bookshelf</td><td>Medium</td><td>Deployments, Services, Ingress, HPA, rollouts</td><td>Three tiers + Ingress + HPA + zero-downtime rollout</td></tr>
+  <tr><td>5 — Lock It Down</td><td>Medium</td><td>NetworkPolicies, RBAC, ServiceAccounts</td><td>Default-deny netpol; RBAC least-privilege with --as</td></tr>
+  <tr><td>6 — Break It On Purpose</td><td>Medium</td><td>All the fundamentals, under diagnostic pressure</td><td>The describe→events→logs diagnostic reflex (CKA-style)</td></tr>
+  <tr><td>7 — Nine-Node Fleet</td><td>Advanced</td><td>HA control plane, taints, spread, PDBs, chaos ops</td><td>Taints/spread/PDBs; surviving control-plane loss; etcd quorum</td></tr>
+  <tr><td>8 — GitOps &amp; Observability</td><td>Advanced</td><td>Helm, GitOps drift-correction, metrics→alerts loop</td><td>Argo CD drift-correction; Prometheus→Grafana→alert loop</td></tr>
+  <tr><td>9 — Mini AI Platform</td><td>Advanced</td><td>Kueue queueing, batch Jobs, LLM serving, hybrid GPU</td><td>Kueue quotas/queueing; LLM serving; hybrid GPU architecture</td></tr>
+</table>
+
+<h3>Quick reference card</h3>
+<pre><code><span class="c"># ---- session ----</span>
+open -a Docker                                  <span class="c"># engine first</span>
+minikube start --profile=practice               <span class="c"># resume lab</span>
+minikube stop  --profile=practice               <span class="c"># pause lab (then quit Docker Desktop)</span>
+<span class="c"># ---- inspect ----</span>
+minikube status --profile=practice · k9s · minikube dashboard --profile=practice
+kubectl get pods -A --field-selector=status.phase!=Running    <span class="c"># anything unhealthy?</span>
+<span class="c"># ---- reach apps ----</span>
+kubectl port-forward svc/NAME 8080:80 · minikube service NAME · minikube tunnel
+<span class="c"># ---- reset ----</span>
+kubectl delete namespace NS                     <span class="c"># after each scenario</span>
+minikube delete --profile=practice              <span class="c"># nuclear; rebuild in ~3 min (§2.3–2.4)</span></code></pre>
+
+<div class="footer-note">
+  Compiled July 2026 for a MacBook Pro M5 Max (128 GB) running macOS 26 Tahoe · Docker Desktop ≥4.80 + minikube v1.38 + Kubernetes v1.34 + Calico.
+  Fully self-contained: § references point to Part A of this document.
+  Expected outputs are representative — hashes, IPs, ages and timing will differ on your machine; match the shape, not the bytes.
+  All tools referenced are free: Docker Desktop under its personal-use terms; everything else Apache-2.0/MIT open source.
+</div>
+
+</div><!-- /page -->
+</body>
+</html>

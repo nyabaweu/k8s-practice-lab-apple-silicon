@@ -1,0 +1,16 @@
+# Tolerates the hardware=special taint and pins to the "special" node
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: special-app}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: special-app}}
+  template:
+    metadata: {labels: {app: special-app}}
+    spec:
+      tolerations:
+      - {key: hardware, operator: Equal, value: special, effect: NoSchedule}
+      nodeSelector: {kubernetes.io/hostname: fleet-m09}
+      containers:
+      - name: app
+        image: nginx:1.27

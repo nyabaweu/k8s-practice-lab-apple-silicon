@@ -1,0 +1,24 @@
+# In-cluster LLM serving on CPU (Ollama, arm64-native)
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: llm}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: llm}}
+  template:
+    metadata: {labels: {app: llm}}
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        ports: [{containerPort: 11434}]
+        resources:
+          requests: {cpu: "2", memory: 4Gi}
+          limits:   {cpu: "4", memory: 8Gi}
+        volumeMounts: [{name: models, mountPath: /root/.ollama}]
+        readinessProbe:
+          httpGet: {path: /, port: 11434}
+          initialDelaySeconds: 10
+      volumes:
+      - name: models
+        persistentVolumeClaim: {claimName: model-cache}

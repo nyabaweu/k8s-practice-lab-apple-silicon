@@ -1,0 +1,35 @@
+<svg font-family="-apple-system,Segoe UI,Arial,sans-serif" viewbox="0 0 920 360" xmlns="http://www.w3.org/2000/svg">
+<rect fill="#f5f7fa" height="340" rx="14" stroke="#94a3b8" stroke-width="1.5" width="900" x="10" y="10"></rect>
+<text fill="#1a2332" font-size="15" font-weight="700" text-anchor="middle" x="460" y="38">macOS 26 Tahoe — MacBook Pro M5 Max (16 CPU cores · 128 GB RAM · 40-core GPU)</text>
+<text fill="#66738a" font-size="11" text-anchor="middle" x="460" y="57">your terminal: kubectl · minikube · helm · k9s · docker CLI — all talking to the layers below</text>
+<rect fill="#eff6ff" height="240" rx="12" stroke="#2563eb" stroke-width="2" width="840" x="40" y="75"></rect>
+<text fill="#1e40af" font-size="13.5" font-weight="700" text-anchor="middle" x="460" y="100">Docker Desktop Linux VM (Virtualization.framework) — CPUs/RAM set in Settings → Resources</text>
+<text fill="#66738a" font-size="11" text-anchor="middle" x="460" y="118">masks the M5's SME2 CPU features from the guest — the reason this stack is crash-safe on your chip</text>
+<g font-size="11" text-anchor="middle">
+<rect fill="#fff" height="160" rx="10" stroke="#0f766e" stroke-width="1.6" width="250" x="70" y="135"></rect>
+<text fill="#0f766e" font-size="12.5" font-weight="700" x="195" y="158">practice  (control plane)</text>
+<text fill="#66738a" font-size="10" x="195" y="176">a Docker container acting as node 1</text>
+<rect fill="#dbeafe" height="24" rx="5" stroke="#2563eb" width="100" x="88" y="188"></rect><text fill="#1e40af" font-size="10" x="138" y="204">kube-apiserver</text>
+<rect fill="#dbeafe" height="24" rx="5" stroke="#2563eb" width="106" x="196" y="188"></rect><text fill="#1e40af" font-size="10" x="249" y="204">etcd · scheduler</text>
+<rect fill="#ccfbf1" height="24" rx="5" stroke="#0f766e" width="100" x="88" y="220"></rect><text fill="#0f766e" font-size="10" x="138" y="236">kubelet</text>
+<rect fill="#ccfbf1" height="24" rx="5" stroke="#0f766e" width="106" x="196" y="220"></rect><text fill="#0f766e" font-size="10" x="249" y="236">calico-node</text>
+<rect fill="#fef3c7" height="24" rx="5" stroke="#b45309" width="214" x="88" y="252"></rect><text fill="#b45309" font-size="10" x="195" y="268">system pods only (tainted in §2.5)</text>
+</g>
+<g font-size="11" text-anchor="middle">
+<rect fill="#fff" height="160" rx="10" stroke="#0f766e" stroke-width="1.6" width="250" x="345" y="135"></rect>
+<text fill="#0f766e" font-size="12.5" font-weight="700" x="470" y="158">practice-m02  (worker)</text>
+<text fill="#66738a" font-size="10" x="470" y="176">node 2 — another container</text>
+<rect fill="#ccfbf1" height="24" rx="5" stroke="#0f766e" width="100" x="363" y="188"></rect><text fill="#0f766e" font-size="10" x="413" y="204">kubelet</text>
+<rect fill="#ccfbf1" height="24" rx="5" stroke="#0f766e" width="106" x="471" y="188"></rect><text fill="#0f766e" font-size="10" x="524" y="204">calico-node</text>
+<rect fill="#dbeafe" height="56" rx="5" stroke="#2563eb" width="214" x="363" y="220"></rect><text fill="#1e40af" x="470" y="252">your workload pods</text>
+</g>
+<g font-size="11" text-anchor="middle">
+<rect fill="#fff" height="160" rx="10" stroke="#0f766e" stroke-width="1.6" width="250" x="620" y="135"></rect>
+<text fill="#0f766e" font-size="12.5" font-weight="700" x="745" y="158">practice-m03  (worker)</text>
+<text fill="#66738a" font-size="10" x="745" y="176">node 3 — another container</text>
+<rect fill="#ccfbf1" height="24" rx="5" stroke="#0f766e" width="100" x="638" y="188"></rect><text fill="#0f766e" font-size="10" x="688" y="204">kubelet</text>
+<rect fill="#ccfbf1" height="24" rx="5" stroke="#0f766e" width="106" x="746" y="188"></rect><text fill="#0f766e" font-size="10" x="799" y="204">calico-node</text>
+<rect fill="#dbeafe" height="56" rx="5" stroke="#2563eb" width="214" x="638" y="220"></rect><text fill="#1e40af" x="745" y="252">your workload pods</text>
+</g>
+<text fill="#66738a" font-size="10.5" font-style="italic" text-anchor="middle" x="460" y="338">Delete and recreate the whole thing in ~3 minutes. That disposability is a feature — break things fearlessly.</text>
+</svg>

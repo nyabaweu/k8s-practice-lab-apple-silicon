@@ -1,0 +1,12 @@
+# A new PVC born from the snapshot — point postgres.yaml's claimName here to restore
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: pg-data-restored}
+spec:
+  storageClassName: csi-hostpath-sc
+  dataSource:
+    name: pg-snap-1
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+  accessModes: [ReadWriteOnce]
+  resources: {requests: {storage: 2Gi}}
