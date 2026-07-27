@@ -137,7 +137,7 @@
     </svg>
   </div>
   <h1>Kubernetes Practice Lab<br>on the MacBook Pro M5</h1>
-  <p class="subtitle">Install &amp; operate your local cluster, then master it through nine end-to-end scenarios — from your first deployment to a nine-node chaos fleet, GitOps, and a miniature AI platform.</p>
+  <p class="subtitle">Install &amp; operate your local cluster, then master it through ten end-to-end scenarios — from your first deployment to a nine-node chaos fleet, GitOps, a miniature AI platform, and GPU-accelerated inference.</p>
   <p class="meta">
         Environment: MacBook Pro M5 Max · 128 GB RAM · macOS 26 Tahoe · Docker Desktop + minikube + Calico · all-free tooling.<br>
     Compiled July 2026
@@ -176,6 +176,7 @@
         <li><a href="#sc7">Scenario 7 — The Nine-Node Fleet: HA, Placement &amp; Chaos</a></li>
         <li><a href="#sc8">Scenario 8 — GitOps &amp; Observability: Argo CD + Prometheus/Grafana</a></li>
         <li><a href="#sc9">Scenario 9 — The Mini AI Platform: Kueue, Batch Jobs &amp; LLM Serving</a></li>
+        <li><a href="#sc10">Scenario 10 — The GPU, Unlocked: krunkit, Device Plugins &amp; Vulkan Inference</a> <span class="pill">new</span></li>
       </ol>
     </li>
     <li><a href="#map">Appendix — Scenario ↔ Concept Map &amp; Quick Reference</a></li>
@@ -184,12 +185,12 @@
 
 <div class="callout">
   <span class="label">How to use this lab book</span>
-  Part A is your operations manual — keep it handy. Parts B–D are nine self-contained scenarios in rising difficulty; each states its goal, estimated time, the concepts it exercises, every command with the <em>output you should expect</em>, a deliberate failure or surprise to investigate, and a cleanup block. Expected outputs show representative values — your pod suffixes, IPs and ages will differ; the <em>shape</em> of the output is what to verify. Do them in order the first time; revisit any of them freely — everything is disposable by design.
+  Part A is your operations manual — keep it handy. Parts B–D are ten self-contained scenarios in rising difficulty; each states its goal, estimated time, the concepts it exercises, every command with the <em>output you should expect</em>, a deliberate failure or surprise to investigate, and a cleanup block. Expected outputs show representative values — your pod suffixes, IPs and ages will differ; the <em>shape</em> of the output is what to verify. Do them in order the first time; revisit any of them freely — everything is disposable by design.
 </div>
 
 <div class="callout warn">
   <span class="label">System requirements</span>
-  Apple Silicon Mac (M1–M5; written for the M5 generation) · <strong>macOS 26 Tahoe ≥ 26.5.1</strong> (earlier Tahoe builds carry an M5-specific stability bug under container load) · <strong>Docker Desktop ≥ 4.80</strong> with its VM sized 6 CPU / 8 GB / 60 GB (12 CPU / 48 GB / 120 GB for Part D) · ~80 GB free disk · minikube v1.38+ / Kubernetes v1.34. Intel Macs are not covered, and on M4/M5 chips do <em>not</em> substitute Podman machine, Colima/Lima or QEMU-based engines — they expose SME/SME2 CPU features that crash Linux workloads; Docker Desktop masks them.
+  Apple Silicon Mac (M1–M5; written for the M5 generation) · <strong>macOS 26 Tahoe ≥ 26.5.1</strong> (earlier Tahoe builds carry an M5-specific stability bug under container load) · <strong>Docker Desktop ≥ 4.80</strong> with its VM sized 6 CPU / 8 GB / 60 GB (12 CPU / 48 GB / 120 GB for Part D) · ~80 GB free disk · minikube v1.38+ / Kubernetes v1.34. Intel Macs are not covered, and on M4/M5 chips do <em>not</em> substitute Podman machine, Colima/Lima or QEMU-based engines — they expose SME/SME2 CPU features that crash Linux workloads; Docker Desktop masks them. (Vetted exception: Scenario 10's krunkit driver — libkrun masks SME on its own.)
 </div>
 
 <!-- ======================= PART A ======================= -->
@@ -436,7 +437,7 @@ fleet-m09   Ready    &lt;none&gt;          2m    v1.34.1</span>
 
 <div class="callout danger">
   <span class="label">The GPU truth</span>
-  Your 40-core GPU is invisible to this cluster — macOS containers cannot access Apple's GPU (no Metal inside the Linux VM, no device plugin). Nothing on any local stack changes that today. Scenario 9 uses the honest architecture instead: GPU-accelerated inference runs <em>natively on macOS</em> (Ollama with Metal), and the cluster treats it as an external model backend — which is exactly how real platforms treat GPU pools they don't own. Your CPU cores, however, are fully available, and 12 of them make CPU inference genuinely usable.
+  Your 40-core GPU is invisible to <em>this</em> cluster — on the docker driver, macOS containers cannot access Apple's GPU (no Metal inside Docker Desktop's Linux VM, no device plugin). Scenario 9 uses the honest architecture for that world: GPU-accelerated inference runs <em>natively on macOS</em> (Ollama with Metal), and the cluster treats it as an external model backend — exactly how real platforms treat GPU pools they don't own. Your CPU cores, meanwhile, are fully available, and 12 of them make CPU inference genuinely usable. <strong>Is that the whole story? No —</strong> there is now one local stack that <em>does</em> put the GPU inside pods: minikube's <strong>krunkit</strong> driver, at the cost of leaving the easy docker path. That trade gets its own full walkthrough in <a href="#sc10">Scenario 10</a>.
 </div>
 <!-- ======================= PART B ======================= -->
 <div class="part-banner demo" id="part-b">
@@ -1612,6 +1613,189 @@ EOF</span>
 <span class="cmd">$ pkill ollama</span>                             <span class="c"># stop the native server on the Mac</span>
 <span class="cmd">$ kubectl config set-context --current --namespace=default</span></code></pre>
 
+<div class="callout">
+  <span class="label">Wait — did we say “no GPU in the cluster”?</span>
+  Yes… and no. Everything above is true <em>for the docker driver</em>, and the hybrid you just built remains the right architecture on it. But if you're willing to abandon the easy docker path for one special-purpose cluster, there is now a stack that puts your Apple GPU <em>inside pods</em> — a different minikube driver, a device plugin, and Vulkan doing the translation. It has real trade-offs, which is exactly why it earns its own scenario rather than a footnote. Turn the page.
+</div>
+
+<h2 id="sc10">Scenario 10 — The GPU, Unlocked: krunkit, Device Plugins &amp; Vulkan Inference <span class="pill">added post-release</span></h2>
+<p>Scenario 9 ended with an honest limitation: on the docker driver, the Apple GPU is invisible to pods — full stop, still true. So did we oversell the limitation? <strong>Yes and no.</strong> The GPU is unreachable <em>from Docker Desktop's VM</em>, and that driver remains this lab's daily recommendation for good reasons (multi-node, dead-simple, battle-tested SME2 masking). But minikube's newer <strong>krunkit</strong> driver (shipped in v1.37, Sept 2025, with an official upstream tutorial) takes a different road: it virtualizes the GPU into the VM, a device plugin advertises it to Kubernetes, and pods run <em>GPU-accelerated inference</em>. The price of admission: a separate single-node cluster, a Vulkan translation layer instead of native Metal, and a few more moving parts. This scenario builds that world alongside your existing one — nothing from Scenarios 1–9 changes.</p>
+
+<table class="kv">
+  <tr><th>Goal</th><td>Stand up a GPU-enabled krunkit cluster, teach Kubernetes to schedule the Apple GPU via a device plugin, serve a real model on it, and hit the sharing limits on purpose.</td></tr>
+  <tr><th>Time</th><td>~90 minutes (model download included)</td></tr>
+  <tr><th>Concepts</th><td>VM drivers &amp; virtio-gpu · device plugins &amp; extended resources · Vulkan/Venus inference · scheduling against device counts</td></tr>
+  <tr><th>Requires</th><td>Apple Silicon · macOS 14+ (macOS 26 Tahoe is the smoothest: no sudo for networking) · minikube ≥ 1.38.1 · ~14 GB free RAM while running</td></tr>
+</table>
+
+<h3>First, the honest physics (read before typing)</h3>
+<ul>
+  <li><strong>This is not true GPU passthrough</strong> — Apple GPUs can't be handed to a VM (no IOMMU for that). Instead: the pod's app speaks <strong>Vulkan</strong> → Mesa's <em>Venus</em> driver forwards it over <strong>virtio-gpu</strong> → the host translates via <strong>MoltenVK</strong> → <strong>Metal</strong> → your 40 cores. API virtualization, four hops, genuinely GPU-fast.</li>
+  <li><strong>Expect ~50–80% of native Metal</strong> throughput, and several-times-faster-than-CPU (community benchmarks: a 7B model at ~36 tok/s in-VM vs ~71 native on an M2 Max; Red Hat measured 75–80% of native on 1B–13B models). Never expect “native speed” — that claim belongs to a separate experimental path (API remoting) not used here.</li>
+  <li><strong>M4/M5-safe, independently:</strong> libkrun (under krunkit) has masked the SME CPU features since v1.19.0 (June 2025) — this stack avoids the SIGILL saga by its own route. The two engines in this lab are <em>both</em> safe; they just unlock different superpowers.</li>
+  <li><strong>Single-node</strong> is the only documented topology, and GPU access via the device plugin is <em>cooperative sharing</em> — no isolation between pods (the exact problem datacenter GPUs solve with hardware MIG partitioning; here you get the honor system).</li>
+</ul>
+
+<h3>Act 1 — Install the GPU stack and start the cluster</h3>
+<pre><code><span class="c"># krunkit (the VM engine) — note: the Homebrew tap moved to the libkrun org;
+# older guides say "slp/krunkit" — same software, new home:</span>
+<span class="cmd">$ brew tap libkrun/krun &amp;&amp; brew install krunkit</span>
+<span class="cmd">$ krunkit --version</span>
+<span class="out">krunkit 1.0.x</span>                              <span class="c"># need ≥ 1.0.0</span>
+
+<span class="c"># vmnet-helper (networking — krunkit has no built-in NAT; this bridges it,
+# and on macOS 26 it runs with NO sudo at all):</span>
+<span class="cmd">$ curl -fsSL https://github.com/minikube-machine/vmnet-helper/releases/latest/download/install.sh | bash</span>
+
+<span class="c"># A model to serve — must be GGUF format. ~1.2 GB, one-time download:</span>
+<span class="cmd">$ mkdir -p ~/models &amp;&amp; cd ~/models</span>
+<span class="cmd">$ curl -LO https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q8_0.gguf</span>
+
+<span class="c"># The GPU cluster — a SEPARATE profile; your practice/fleet clusters are untouched.
+# --memory is on you: model + KV cache must fit the VM (the tutorial omits this; don't):</span>
+<span class="cmd">$ minikube start --profile=gpu --driver=krunkit --memory=12288 --cpus=6 \
+    --mount-string ~/models:/mnt/models</span>
+<span class="out">😄  [gpu] minikube v1.38.x on Darwin 26.5.1 (arm64)
+✨  Using the krunkit driver based on user configuration
+🔥  Creating krunkit VM (CPUs=6, Memory=12288MB) ...
+🏄  Done! kubectl is now configured to use "gpu" cluster</span>
+
+<span class="c"># The moment of truth — does the VM see a GPU device?</span>
+<span class="cmd">$ minikube ssh -p gpu -- ls -la /dev/dri</span>
+<span class="out">crw-rw---- 1 root video 226,   0 Jul 16 14:02 card0
+crw-rw---- 1 root render 226, 128 Jul 16 14:02 renderD128</span>   <span class="c"># renderD128 = your Apple GPU,
+                                                                # wearing a Linux DRM costume</span></code></pre>
+
+<h3>Act 2 — Teach Kubernetes the GPU exists (the device plugin)</h3>
+<p>A raw <code>/dev/dri</code> node means nothing to the scheduler. Enter the device-plugin pattern — the same mechanism NVIDIA's GPU Operator uses in datacenters, in miniature. The <code>generic-device-plugin</code> DaemonSet advertises the device as an <em>extended resource</em> pods can request:</p>
+<pre><code><span class="c"># gpu-device-plugin.yaml (from the upstream minikube AI-playground tutorial):</span>
+<span class="k">apiVersion:</span> <span class="s">apps/v1</span>
+<span class="k">kind:</span> <span class="s">DaemonSet</span>
+<span class="k">metadata:</span>
+  <span class="k">name:</span> <span class="s">generic-device-plugin</span>
+  <span class="k">namespace:</span> <span class="s">kube-system</span>
+  <span class="k">labels:</span> {<span class="k">app.kubernetes.io/name:</span> <span class="s">generic-device-plugin</span>}
+<span class="k">spec:</span>
+  <span class="k">selector:</span> {<span class="k">matchLabels:</span> {<span class="k">app.kubernetes.io/name:</span> <span class="s">generic-device-plugin</span>}}
+  <span class="k">template:</span>
+    <span class="k">metadata:</span>
+      <span class="k">labels:</span> {<span class="k">app.kubernetes.io/name:</span> <span class="s">generic-device-plugin</span>}
+    <span class="k">spec:</span>
+      <span class="k">priorityClassName:</span> <span class="s">system-node-critical</span>
+      <span class="k">tolerations:</span>
+      - {<span class="k">operator:</span> <span class="s">Exists</span>, <span class="k">effect:</span> <span class="s">NoSchedule</span>}
+      <span class="k">containers:</span>
+      - <span class="k">name:</span> <span class="s">generic-device-plugin</span>
+        <span class="k">image:</span> <span class="s">squat/generic-device-plugin</span>
+        <span class="k">args:</span>
+        - <span class="s">--device</span>
+        - |
+          name: dri
+          groups:
+          - count: 4              <span class="c"># up to 4 pods may share /dev/dri — sharing, NOT isolation</span>
+            paths:
+            - path: /dev/dri
+        <span class="k">securityContext:</span> {<span class="k">privileged:</span> <span class="s">true</span>}
+        <span class="k">volumeMounts:</span>
+        - {<span class="k">name:</span> <span class="s">device-plugin</span>, <span class="k">mountPath:</span> <span class="s">/var/lib/kubelet/device-plugins</span>}
+        - {<span class="k">name:</span> <span class="s">dev</span>, <span class="k">mountPath:</span> <span class="s">/dev</span>}
+      <span class="k">volumes:</span>
+      - {<span class="k">name:</span> <span class="s">device-plugin</span>, <span class="k">hostPath:</span> {<span class="k">path:</span> <span class="s">/var/lib/kubelet/device-plugins</span>}}
+      - {<span class="k">name:</span> <span class="s">dev</span>, <span class="k">hostPath:</span> {<span class="k">path:</span> <span class="s">/dev</span>}}</code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f gpu-device-plugin.yaml</span>
+<span class="cmd">$ kubectl describe node gpu | grep -A4 Allocatable:</span>
+<span class="out">Allocatable:
+  cpu:                6
+  devic.es/dri:       4</span>          <span class="c"># there it is — the Apple GPU as a schedulable K8s
+                                    # resource. (devic.es is the plugin's real domain name,
+                                    # not a typo.) Compare: nvidia.com/gpu in the datacenter.</span></code></pre>
+
+<h3>Act 3 — Serve a model ON the GPU</h3>
+<pre><code><span class="c"># llm-gpu.yaml — llama-server (ramalama image: ships llama.cpp's Vulkan backend
+# plus the Mesa/Venus userspace this VM needs), requesting the GPU resource:</span>
+<span class="k">apiVersion:</span> <span class="s">apps/v1</span>
+<span class="k">kind:</span> <span class="s">Deployment</span>
+<span class="k">metadata:</span> {<span class="k">name:</span> <span class="s">llm-gpu</span>}
+<span class="k">spec:</span>
+  <span class="k">replicas:</span> <span class="s">1</span>
+  <span class="k">selector:</span> {<span class="k">matchLabels:</span> {<span class="k">app:</span> <span class="s">llm-gpu</span>}}
+  <span class="k">template:</span>
+    <span class="k">metadata:</span> {<span class="k">labels:</span> {<span class="k">app:</span> <span class="s">llm-gpu</span>}}
+    <span class="k">spec:</span>
+      <span class="k">containers:</span>
+      - <span class="k">name:</span> <span class="s">llama-server</span>
+        <span class="k">image:</span> <span class="s">quay.io/ramalama/ramalama:latest</span>
+        <span class="k">command:</span> [<span class="s">llama-server</span>]
+        <span class="k">args:</span> [<span class="s">--host</span>, <span class="s">"0.0.0.0"</span>, <span class="s">--port</span>, <span class="s">"8080"</span>,
+               <span class="s">--model</span>, <span class="s">/mnt/models/tinyllama-1.1b-chat-v1.0.Q8_0.gguf</span>,
+               <span class="s">--ctx-size</span>, <span class="s">"2048"</span>, <span class="s">-ngl</span>, <span class="s">"999"</span>,   <span class="c"># -ngl 999 = ALL layers to the GPU</span>
+               <span class="s">--threads</span>, <span class="s">"6"</span>, <span class="s">--no-warmup</span>]
+        <span class="k">ports:</span> [{<span class="k">containerPort:</span> <span class="s">8080</span>}]
+        <span class="k">resources:</span>
+          <span class="k">limits:</span>
+            <span class="k">devic.es/dri:</span> <span class="s">1</span>              <span class="c"># the whole point of Act 2</span>
+            <span class="k">memory:</span> <span class="s">4Gi</span>
+        <span class="k">volumeMounts:</span> [{<span class="k">name:</span> <span class="s">models</span>, <span class="k">mountPath:</span> <span class="s">/mnt/models</span>}]
+      <span class="k">volumes:</span>
+      - <span class="k">name:</span> <span class="s">models</span>
+        <span class="k">hostPath:</span> {<span class="k">path:</span> <span class="s">/mnt/models</span>}   <span class="c"># the --mount-string from Act 1</span></code></pre>
+<pre><code><span class="cmd">$ kubectl apply -f llm-gpu.yaml &amp;&amp; kubectl expose deployment llm-gpu --port=8080</span>
+<span class="cmd">$ kubectl logs deploy/llm-gpu | grep -i vulkan</span>
+<span class="out">ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = Virtio-GPU Venus (Apple M5 Max) ...</span>   <span class="c"># Vulkan sees your GPU through the VM</span>
+
+<span class="cmd">$ kubectl run prompt --image=curlimages/curl --restart=Never --rm -it -- \
+    curl -s http://llm-gpu:8080/completion -d '{
+      "prompt":"Explain a Kubernetes pod in one sentence.","n_predict":48}'</span>
+<span class="out">{"content":" A pod is the smallest deployable unit in Kubernetes, wrapping one or
+more containers that share networking and storage...",
+ "timings":{"predicted_per_second":57.8,...}}</span>
+<span class="c"># ~58 tok/s from a pod. Scenario 9's in-cluster CPU pod managed ~13 tok/s on a
+# similar-size model; native Metal would do roughly 75-100+. That's the deal in one
+# line: several-times faster than CPU, ~50-80% of native — paid for with one extra
+# driver and a Vulkan translation layer.</span></code></pre>
+
+<h3>Act 4 — Hit the sharing wall on purpose</h3>
+<pre><code><span class="c"># Act 2's device plugin advertised count: 4. Let's spend it all:</span>
+<span class="cmd">$ kubectl scale deployment llm-gpu --replicas=5</span>
+<span class="cmd">$ kubectl get pods</span>
+<span class="out">NAME                       READY   STATUS    RESTARTS   AGE
+llm-gpu-6f9c8d7b54-2kq8x   1/1     Running   0          8m
+llm-gpu-6f9c8d7b54-9mzw4   1/1     Running   0          50s
+llm-gpu-6f9c8d7b54-kk3fd   1/1     Running   0          50s
+llm-gpu-6f9c8d7b54-tt7lg   1/1     Running   0          50s
+llm-gpu-6f9c8d7b54-vv9qk   0/1     Pending   0          50s</span>   <span class="c"># 4 Running, 1 Pending</span>
+
+<span class="cmd">$ kubectl describe pod llm-gpu-6f9c8d7b54-vv9qk | grep -A2 Events:</span>
+<span class="out">Events:
+  Warning  FailedScheduling  ...  0/1 nodes are available: 1 Insufficient devic.es/dri.</span>
+<span class="c"># The same "Insufficient" grammar as Drill 1 — but now the scarce resource is a GPU.
+# And note what count:4 really bought you: FOUR pods time-sharing ONE GPU with no
+# isolation — one greedy pod can starve the others. Datacenter GPUs solve this with
+# hardware partitioning (MIG); your laptop just taught you why that exists.</span>
+<span class="cmd">$ kubectl scale deployment llm-gpu --replicas=1</span></code></pre>
+
+<h3>What can bite you (field notes)</h3>
+<table>
+  <tr><th>Symptom</th><th>Cause &amp; fix</th></tr>
+  <tr><td><code>driver 'krunkit' is not supported</code></td><td>minikube older than v1.37 — <code>brew upgrade minikube</code> (this lab pins ≥1.38.1).</td></tr>
+  <tr><td>Cluster start hangs on networking</td><td>vmnet-helper missing or unauthorized. macOS ≤15 needs its sudoers file (see its install docs); macOS 26+ needs nothing. Logs: <code>~/.minikube/machines/gpu/vmnet-helper.log</code>.</td></tr>
+  <tr><td><code>brew tap slp/krunkit</code> fails</td><td>The tap moved to <code>libkrun/krun</code> (older tutorials have the stale name).</td></tr>
+  <tr><td>llama-server CrashLoopBackOff</td><td>Usually the model path — did you pass <code>--mount-string</code> at <code>minikube start</code>? It cannot be added to a running VM. Or the model isn't GGUF.</td></tr>
+  <tr><td>OOM / VM freeze under load</td><td>Model + context must fit the VM's memory. Size <code>--memory</code> generously (12 GB here); bigger models (7B Q4 ≈ 4.2 GB file) need more.</td></tr>
+  <tr><td>Slow despite GPU</td><td>Check the Vulkan line in logs (Act 3). Avoid flash-attention flags on Vulkan; stick to Q4/Q8 quantizations.</td></tr>
+</table>
+
+<div class="callout tip">
+  <span class="label">What this scenario proved</span>
+  The docker-driver limitation was real — and so is the door around it. More importantly, you just ran the <em>datacenter GPU pattern end to end in miniature</em>: a device exposed to a VM, a device plugin advertising it as a schedulable resource, workloads requesting it by name, and the scheduler enforcing scarcity. Swap <code>devic.es/dri</code> for <code>nvidia.com/gpu</code>, the DaemonSet for the NVIDIA GPU Operator, and count-sharing for MIG partitions — same architecture, three more zeros on the price tag.
+</div>
+
+<h3>Cleanup</h3>
+<pre><code><span class="cmd">$ minikube delete --profile=gpu</span>            <span class="c"># the GPU world vanishes entirely</span>
+<span class="cmd">$ minikube start --profile=practice</span>         <span class="c"># daily lab, exactly as you left it</span>
+<span class="c"># ~/models is on your Mac — keep it; downloads are the slow part.</span></code></pre>
+
 <!-- ======================= APPENDIX ======================= -->
 <h2 id="map">Appendix — Scenario ↔ Concept Map &amp; Quick Reference</h2>
 <table>
@@ -1625,6 +1809,7 @@ EOF</span>
   <tr><td>7 — Nine-Node Fleet</td><td>Advanced</td><td>HA control plane, taints, spread, PDBs, chaos ops</td><td>Taints/spread/PDBs; surviving control-plane loss; etcd quorum</td></tr>
   <tr><td>8 — GitOps &amp; Observability</td><td>Advanced</td><td>Helm, GitOps drift-correction, metrics→alerts loop</td><td>Argo CD drift-correction; Prometheus→Grafana→alert loop</td></tr>
   <tr><td>9 — Mini AI Platform</td><td>Advanced</td><td>Kueue queueing, batch Jobs, LLM serving, hybrid GPU</td><td>Kueue quotas/queueing; LLM serving; hybrid GPU architecture</td></tr>
+  <tr><td>10 — The GPU, Unlocked</td><td>Advanced</td><td>Device plugins, extended resources, Vulkan inference</td><td>The datacenter GPU pattern in miniature; scheduling device scarcity</td></tr>
 </table>
 
 <h3>Quick reference card</h3>

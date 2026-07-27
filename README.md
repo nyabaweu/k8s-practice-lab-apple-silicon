@@ -1,8 +1,10 @@
 # Kubernetes Practice Lab on the MacBook Pro (Apple Silicon M5)
 
-A complete, hands-on Kubernetes learning lab for Apple Silicon Macs — install and operate a real multi-node cluster on your laptop, then master it through **nine end-to-end scenarios** that go from your first deployment to a nine-node chaos fleet, GitOps, and a miniature AI platform.
+A complete, hands-on Kubernetes learning lab for Apple Silicon Macs — install and operate a real multi-node cluster on your laptop, then master it through **ten end-to-end scenarios** that go from your first deployment to a nine-node chaos fleet, GitOps, a miniature AI platform, and GPU-accelerated inference.
 
 Every scenario shows the **exact output you should expect** at each step, stages a deliberate failure or surprise to investigate, and ends with a clean teardown. Everything is disposable by design — break things fearlessly.
+
+> **🆕 July 2026 update:** [Scenario 10 — The GPU, Unlocked](guide/scenario-10-gpu-unlocked.md) — GPU-accelerated inference *inside pods* via minikube's krunkit driver and the device-plugin pattern. Scenarios 1–9 are unchanged.
 
 > **Why this exists:** running Kubernetes on M4/M5-generation Apple Silicon has real pitfalls (SME2 CPU-feature crashes in most VM stacks, no GPU passthrough, docker-driver capacity quirks). This lab documents a stack verified to work — **Docker Desktop + minikube + Calico** — and turns the platform's limits into lessons instead of surprises.
 
@@ -18,7 +20,7 @@ Every scenario shows the **exact output you should expect** at each step, stages
 | **Kubernetes** | v1.34.x (pinned in every `minikube start` in this guide) | same |
 | **Network** | Internet for image pulls (several GB on first run) | same |
 
-> **Intel Macs are not supported** by this guide (different virtualization stack, different pitfalls). On **M4/M5 Macs specifically, do not substitute Podman machine, Colima/Lima, or QEMU-based engines** — as of mid-2026 they expose SME/SME2 CPU features to Linux guests and workloads crash with SIGILL. Docker Desktop masks these features; that's why it's the required engine here.
+> **Intel Macs are not supported** by this guide (different virtualization stack, different pitfalls). On **M4/M5 Macs specifically, do not substitute Podman machine, Colima/Lima, or QEMU-based engines** — as of mid-2026 they expose SME/SME2 CPU features to Linux guests and workloads crash with SIGILL. Docker Desktop masks these features; that's why it's the required engine here. (One vetted exception: the **krunkit** driver used in Scenario 10 — its libkrun engine masks SME independently, which is exactly why that scenario can exist.)
 
 ## Environment summary
 
@@ -45,6 +47,7 @@ Every scenario shows the **exact output you should expect** at each step, stages
 | 7 | [The Nine-Node Fleet: HA, Placement & Chaos](guide/scenario-7-nine-node-fleet.md) | Advanced | ~2 h | Taints, spread, PDBs; surviving control-plane loss; etcd quorum |
 | 8 | [GitOps & Observability: Argo CD + Prometheus/Grafana](guide/scenario-8-gitops-observability.md) | Advanced | ~2 h | Drift-correcting GitOps; the metrics → dashboards → alerts loop |
 | 9 | [The Mini AI Platform: Kueue, Batch Jobs & LLM Serving](guide/scenario-9-mini-ai-platform.md) | Advanced | ~2–3 h | Team quotas & job queueing; LLM serving; a hybrid GPU architecture |
+| 10 | [The GPU, Unlocked: krunkit, Device Plugins & Vulkan Inference](guide/scenario-10-gpu-unlocked.md) | Advanced | ~90 min | The datacenter GPU pattern in miniature — real GPU-in-pod inference |
 
 3. Keep the **[Appendix — Concept Map & Quick Reference](guide/appendix-quick-reference.md)** handy.
 
@@ -66,7 +69,7 @@ kubectl get nodes                          # 3 × Ready → you're in business
 
 ## Honest limitations
 
-- **No GPU passthrough** — no container on macOS can see the Apple GPU. Scenario 9 shows the honest hybrid (native Metal-accelerated Ollama fronted by a cluster Service).
+- **No GPU on the docker driver** — with Docker Desktop as the engine, containers cannot see the Apple GPU; Scenario 9 shows the honest hybrid for that world (native Metal-accelerated Ollama fronted by a cluster Service). The exception: minikube's **krunkit** driver virtualizes the GPU into pods — with real trade-offs — and Scenario 10 walks it end to end.
 - **No OS-level node ops** — nodes are containers, so kubeadm upgrades and etcd-backup drills need real VMs.
 - Docker-driver nodes report the whole VM's capacity; the setup guide explains the quirks this causes.
 

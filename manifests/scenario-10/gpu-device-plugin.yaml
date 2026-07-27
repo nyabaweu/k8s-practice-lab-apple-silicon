@@ -1,0 +1,36 @@
+# Scenario 10 — advertise /dev/dri (the virtio-gpu render node) as devic.es/dri.
+# Source pattern: minikube AI Playground tutorial + squat/generic-device-plugin.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: generic-device-plugin
+  namespace: kube-system
+  labels: {app.kubernetes.io/name: generic-device-plugin}
+spec:
+  selector:
+    matchLabels: {app.kubernetes.io/name: generic-device-plugin}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: generic-device-plugin}
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - {operator: Exists, effect: NoSchedule}
+      containers:
+      - name: generic-device-plugin
+        image: squat/generic-device-plugin
+        args:
+        - --device
+        - |
+          name: dri
+          groups:
+          - count: 4              # up to 4 pods share /dev/dri — sharing, NOT isolation
+            paths:
+            - path: /dev/dri
+        securityContext: {privileged: true}
+        volumeMounts:
+        - {name: device-plugin, mountPath: /var/lib/kubelet/device-plugins}
+        - {name: dev, mountPath: /dev}
+      volumes:
+      - {name: device-plugin, hostPath: {path: /var/lib/kubelet/device-plugins}}
+      - {name: dev, hostPath: {path: /dev}}

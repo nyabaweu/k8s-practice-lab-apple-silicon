@@ -2,7 +2,7 @@
 
 > The complete record of the environment you built, how to run it day to day, how to leave it clean after each session — and how to unleash the M5 Max when a scenario calls for it.
 
-> **⚠️ SYSTEM REQUIREMENTS** — Apple Silicon Mac (M1–M5; written for the M5 generation) · **macOS 26 Tahoe ≥ 26.5.1** (earlier Tahoe builds have an M5 stability bug under container load) · **Docker Desktop ≥ 4.80** with its VM sized 6 CPU / 8 GB / 60 GB (12 CPU / 48 GB / 120 GB for Scenarios 7–9) · ~80 GB free disk · minikube v1.38+ / Kubernetes v1.34. **Intel Macs and Podman/Colima/QEMU engines are not supported** — on M4/M5 chips those engines expose SME2 CPU features that crash Linux workloads; Docker Desktop masks them. See the README for the full requirements table.
+> **⚠️ SYSTEM REQUIREMENTS** — Apple Silicon Mac (M1–M5; written for the M5 generation) · **macOS 26 Tahoe ≥ 26.5.1** (earlier Tahoe builds have an M5 stability bug under container load) · **Docker Desktop ≥ 4.80** with its VM sized 6 CPU / 8 GB / 60 GB (12 CPU / 48 GB / 120 GB for Scenarios 7–9) · ~80 GB free disk · minikube v1.38+ / Kubernetes v1.34. **Intel Macs and Podman/Colima/QEMU engines are not supported** — on M4/M5 chips those engines expose SME2 CPU features that crash Linux workloads; Docker Desktop masks them. (Vetted exception: Scenario 10's krunkit driver — libkrun masks SME on its own.) See the README for the full requirements table.
 
 ## 1. What You Built (and Why It's M5-Safe)
 
@@ -243,4 +243,4 @@ $ kubectl config use-context practice
 # Run one at a time unless the VM has RAM for both: minikube stop --profile=practice first.
 ```
 
-> **THE GPU TRUTH** — Your 40-core GPU is invisible to this cluster — macOS containers cannot access Apple's GPU (no Metal inside the Linux VM, no device plugin). Nothing on any local stack changes that today. Scenario 9 uses the honest architecture instead: GPU-accelerated inference runs *natively on macOS* (Ollama with Metal), and the cluster treats it as an external model backend — which is exactly how real platforms treat GPU pools they don't own. Your CPU cores, however, are fully available, and 12 of them make CPU inference genuinely usable.
+> **THE GPU TRUTH** — Your GPU is invisible to *this* cluster — on the docker driver, macOS containers cannot access Apple's GPU (no Metal inside Docker Desktop's Linux VM, no device plugin). Scenario 9 uses the honest architecture for that world: GPU-accelerated inference runs *natively on macOS* (Ollama with Metal), and the cluster treats it as an external model backend — exactly how real platforms treat GPU pools they don't own. Your CPU cores, meanwhile, are fully available. **Is that the whole story? No** — there is now one local stack that *does* put the GPU inside pods: minikube's **krunkit** driver, at the cost of leaving the easy docker path. That trade gets its own full walkthrough in [Scenario 10](scenario-10-gpu-unlocked.md).

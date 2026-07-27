@@ -228,3 +228,7 @@ $ kubectl delete clusterqueue team-research team-app && kubectl delete resourcef
 $ pkill ollama                             # stop the native server on the Mac
 $ kubectl config set-context --current --namespace=default
 ```
+
+---
+
+> **WAIT — DID WE SAY "NO GPU IN THE CLUSTER"?** — Yes… and no. Everything above is true *for the docker driver*, and the hybrid you just built remains the right architecture on it. But if you're willing to abandon the easy docker path for one special-purpose cluster, there is now a stack that puts your Apple GPU *inside pods* — a different minikube driver, a device plugin, and Vulkan doing the translation. It has real trade-offs, which is exactly why it earns its own scenario rather than a footnote: **[Scenario 10 — The GPU, Unlocked](scenario-10-gpu-unlocked.md)**.

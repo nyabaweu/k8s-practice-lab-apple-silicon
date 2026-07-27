@@ -11,6 +11,7 @@
 | 7 — Nine-Node Fleet | Advanced | HA control plane, taints, spread, PDBs, chaos ops | Taints/spread/PDBs; surviving control-plane loss; etcd quorum |
 | 8 — GitOps & Observability | Advanced | Helm, GitOps drift-correction, metrics→alerts loop | Argo CD drift-correction; Prometheus→Grafana→alert loop |
 | 9 — Mini AI Platform | Advanced | Kueue queueing, batch Jobs, LLM serving, hybrid GPU | Kueue quotas/queueing; LLM serving; hybrid GPU architecture |
+| 10 — The GPU, Unlocked | Advanced | Device plugins, extended resources, Vulkan inference | The datacenter GPU pattern in miniature; scheduling device scarcity |
 
 ## Quick reference card
 
